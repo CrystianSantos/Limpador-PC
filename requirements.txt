@@ -1,0 +1,3 @@
+# O Limpador-PC foi desenvolvido para rodar com zero dependências externas obrigatórias!
+# PyInstaller é necessário apenas caso queira gerar o arquivo executável standalone (.exe / binário):
+pyinstaller>=6.0.0

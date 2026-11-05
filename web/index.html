@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Limpador-PC | Otimizador Multiplataforma</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: rgba(18, 24, 39, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #10b981;
+      --success-hover: #059669;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #8b5cf6;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.1) 0%, transparent 40%);
+    }
+
+    /* Header */
+    header {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .logo-box { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      font-size: 24px;
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+    }
+    .logo-text h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .logo-text p { font-size: 11px; color: var(--text-muted); }
+
+    .header-pills { display: flex; align-items: center; gap: 10px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+    }
+    .badge-os { color: #60a5fa; }
+    .badge-git { color: #c084fc; cursor: pointer; transition: 0.2s; }
+    .badge-git:hover { background: rgba(192, 132, 252, 0.15); }
+
+    /* Nav Tabs */
+    nav {
+      background: rgba(15, 23, 42, 0.6);
+      border-bottom: 1px solid var(--card-border);
+      padding: 0 28px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 14px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    /* Container */
+    main {
+      flex: 1;
+      padding: 24px 28px;
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Action Control Banner */
+    .hero-panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .hero-info h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .hero-info p { color: var(--text-muted); font-size: 13px; max-width: 580px; }
+    
+    .btn-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+    }
+    .btn-primary:hover { opacity: 0.95; transform: translateY(-1px); }
+    .btn-success {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    }
+    .btn-success:hover { opacity: 0.95; transform: translateY(-1px); }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid var(--card-border);
+    }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.12); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* Progress bar */
+    .status-box {
+      width: 100%;
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .status-text { font-size: 12px; color: #93c5fd; font-style: italic; }
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      transition: width 0.3s;
+    }
+    .progress-fill.active {
+      width: 100%;
+      animation: pulseBar 1.5s infinite linear;
+    }
+    @keyframes pulseBar {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* Cards Grid */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 22px;
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.16);
+      transform: translateY(-2px);
+    }
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .icon-recycle { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .icon-temp { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    .icon-dup { background: rgba(139, 92, 246, 0.15); color: #c084fc; }
+
+    .card-title { font-size: 15px; font-weight: 700; }
+    .card-stat { font-size: 24px; font-weight: 800; margin: 8px 0; color: #fff; }
+    .card-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 18px; }
+
+    .card-auth {
+      padding-top: 14px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .checkbox-label input { width: 18px; height: 18px; cursor: pointer; }
+
+    /* Tables & Tab Contents */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .panel-table {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .panel-table-header {
+      padding: 16px 22px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .search-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 6px 14px;
+      color: white;
+      font-size: 12px;
+      outline: none;
+      width: 240px;
+    }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    th {
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    td { padding: 12px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    .tag-original { color: #34d399; font-weight: 700; }
+    .tag-copy { color: #f87171; font-weight: 700; }
+
+    /* Terminal Console */
+    .terminal {
+      background: #020617;
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      color: #94a3b8;
+      height: 280px;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+    .terminal-line { margin-bottom: 2px; }
+    .terminal-line.success { color: #34d399; }
+    .terminal-line.err { color: #f87171; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 28px;
+      max-width: 520px;
+      width: 90%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+    .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+    .modal p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="logo-box">
+      <div class="logo-icon">🧹</div>
+      <div class="logo-text">
+        <h1>Limpador-PC Pro</h1>
+        <p>Otimizador & Varredura Multiplataforma</p>
+      </div>
+    </div>
+    <div class="header-pills">
+      <div class="badge badge-os" id="badge-os">🖥️ Detectando SO...</div>
+      <div class="badge badge-git" id="badge-git" onclick="openUpdateModal()" title="Clique para verificar atualizações no GitHub">
+        🔄 v1.0.0 (main)
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav>
+    <button class="tab-btn active" onclick="switchTab('overview')">📊 Visão Geral</button>
+    <button class="tab-btn" onclick="switchTab('recycle')">🗑️ Lixeira</button>
+    <button class="tab-btn" onclick="switchTab('temp')">⚡ Arquivos Temporários</button>
+    <button class="tab-btn" onclick="switchTab('duplicates')">👥 Duplicados</button>
+    <button class="tab-btn" onclick="switchTab('update')">🔄 Atualizações GitHub</button>
+    <button class="tab-btn" onclick="switchTab('logs')">📝 Logs / Console</button>
+  </nav>
+
+  <main>
+    <!-- Hero / Control Action Bar -->
+    <section class="hero-panel">
+      <div class="hero-info">
+        <h2>Painel de Otimização</h2>
+        <p>Varra seu computador em busca de arquivos mortos, lixeira e duplicados com confirmação prévia antes de qualquer exclusão.</p>
+        <div class="status-box">
+          <div class="status-text" id="status-message">Pronto para iniciar.</div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-bar"></div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="startScan('recycle')" id="btn-scan-rec">🗑️ Lixeira</button>
+        <button class="btn btn-secondary" onclick="startScan('temp')" id="btn-scan-temp">⚡ Temporários</button>
+        <button class="btn btn-secondary" onclick="startScan('duplicates')" id="btn-scan-dup">👥 Duplicados</button>
+        <button class="btn btn-primary" onclick="startScan('all')" id="btn-scan-all">🔍 Varredura Completa</button>
+        <button class="btn btn-success" onclick="openCleanModal()" id="btn-clean" disabled>🚀 Executar Limpeza</button>
+      </div>
+    </section>
+
+    <!-- Tab 1: Overview -->
+    <div class="tab-content active" id="tab-overview">
+      <div class="grid-3">
+        <!-- Card Lixeira -->
+        <div class="card">
+          <div>
+            <div class="card-top">
+              <span class="card-title">Lixeira do Sistema</span>
+              <div class="card-icon icon-recycle">🗑️</div>
+            </div>
+            <div class="card-stat" id="stat-recycle">0 B</div>
+            <p class="card-desc">Arquivos que você deletou no passado e continuam ocupando espaço físico no disco rígido.</p>
+          </div>
+          <div class="card-auth">
+            <label class="checkbox-label">
+              <input type="checkbox" id="auth-recycle" onchange="updateCleanBtnState()">
+              Autorizo esvaziar
+            </label>
+            <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="switchTab('recycle')">Ver itens</button>
+          </div>
+        </div>
+
+        <!-- Card Temporários -->
+        <div class="card">
+          <div>
+            <div class="card-top">
+              <span class="card-title">Arquivos Temporários</span>
+              <div class="card-icon icon-temp">⚡</div>
+            </div>
+            <div class="card-stat" id="stat-temp">0 B</div>
+            <p class="card-desc">Caches e arquivos mortos deixados por programas e instaladores. 100% seguro para excluir.</p>
+          </div>
+          <div class="card-auth">
+            <label class="checkbox-label">
+              <input type="checkbox" id="auth-temp" onchange="updateCleanBtnState()">
+              Autorizo limpar
+            </label>
+            <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="switchTab('temp')">Ver itens</button>
+          </div>
+        </div>
+
+        <!-- Card Duplicados -->
+        <div class="card">
+          <div>
+            <div class="card-top">
+              <span class="card-title">Arquivos Duplicados</span>
+              <div class="card-icon icon-dup">👥</div>
+            </div>
+            <div class="card-stat" id="stat-dup">0 B</div>
+            <p class="card-desc">Cópias idênticas confirmadas por SHA-256. O arquivo original é sempre mantido.</p>
+          </div>
+          <div class="card-auth">
+            <label class="checkbox-label">
+              <input type="checkbox" id="auth-dup" onchange="updateCleanBtnState()">
+              Autorizo apagar cópias
+            </label>
+            <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="switchTab('duplicates')">Ver cópias</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total recover box -->
+      <div class="hero-panel" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.2);">
+        <div>
+          <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #34d399; font-weight: 700;">Espaço Total Estimado para Recuperar</span>
+          <h2 style="font-size: 32px; color: #10b981; margin-top: 4px;" id="total-recoverable">0 B</h2>
+        </div>
+        <button class="btn btn-success" onclick="openCleanModal()" id="btn-clean-hero" disabled>Limpar Itens Selecionados</button>
+      </div>
+    </div>
+
+    <!-- Tab 2: Recycle Bin -->
+    <div class="tab-content" id="tab-recycle">
+      <div class="panel-table">
+        <div class="panel-table-header">
+          <h3>🗑️ Itens na Lixeira (<span id="recycle-count">0</span>)</h3>
+          <input type="text" class="search-input" placeholder="Filtrar por nome..." oninput="filterTable('table-recycle', this.value)">
+        </div>
+        <table id="table-recycle">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Tamanho</th>
+              <th>Tipo</th>
+              <th>Caminho Original</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-recycle">
+            <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">Nenhum item na lixeira ou execute uma varredura.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 3: Temp Files -->
+    <div class="tab-content" id="tab-temp">
+      <div class="panel-table">
+        <div class="panel-table-header">
+          <h3>⚡ Arquivos Temporários e Mortos (<span id="temp-count">0</span>)</h3>
+          <input type="text" class="search-input" placeholder="Filtrar por nome..." oninput="filterTable('table-temp', this.value)">
+        </div>
+        <table id="table-temp">
+          <thead>
+            <tr>
+              <th>Arquivo</th>
+              <th>Origem</th>
+              <th>Tamanho</th>
+              <th>Modificado em</th>
+              <th>Caminho</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-temp">
+            <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">Nenhum arquivo temporário carregado. Clique em 'Varredura'.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 4: Duplicates -->
+    <div class="tab-content" id="tab-duplicates">
+      <div class="panel-table">
+        <div class="panel-table-header">
+          <h3>👥 Grupos de Arquivos Duplicados (<span id="dup-count">0</span>)</h3>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="selectAllCopies(true)">Marcar Todas as Cópias</button>
+            <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="selectAllCopies(false)">Desmarcar Todas</button>
+          </div>
+        </div>
+        <div id="dup-tree-container" style="padding: 16px;">
+          <p style="text-align: center; color: var(--text-muted); padding: 30px;">Nenhum duplicado carregado. Clique em 'Varredura'.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 5: GitHub Auto-Update -->
+    <div class="tab-content" id="tab-update">
+      <div class="hero-panel">
+        <div style="max-width: 650px;">
+          <h2>🔄 Atualização Automática via GitHub</h2>
+          <p>Toda vez que você enviar um commit para o branch <strong>main</strong> no seu GitHub, você ou qualquer pessoa que baixar o app pode clicar em verificar e instalar a versão mais nova na máquina sem perder nada!</p>
+          
+          <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 10px;">
+            <label style="font-size: 12px; color: var(--text-muted);">Repositório GitHub Configurado (usuário/repositório):</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="repo-input" class="search-input" style="width: 320px;" placeholder="ex: crystian/Limpador-PC">
+              <button class="btn btn-secondary" onclick="saveRepoSetting()">Salvar</button>
+              <button class="btn btn-primary" onclick="checkForUpdates()">🔍 Verificar Atualizações</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 18px; min-width: 280px;" id="update-status-card">
+          <div style="font-size: 12px; color: var(--text-muted);">Versão Atual:</div>
+          <div style="font-size: 16px; font-weight: 700; margin: 4px 0 12px 0;" id="cur-commit-display">initial-v1.0.0</div>
+          <div id="update-action-box">
+            <span style="font-size: 12px; color: #94a3b8;">Clique em verificar atualizações acima.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 6: Logs -->
+    <div class="tab-content" id="tab-logs">
+      <div class="panel-table-header" style="background: var(--card-bg); border: 1px solid var(--card-border); border-bottom: none; border-radius: 16px 16px 0 0;">
+        <h3>📝 Console do Sistema em Tempo Real</h3>
+      </div>
+      <div class="terminal" id="terminal-logs">
+        <div class="terminal-line">[00:00:00] Sistema inicializado com sucesso.</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Clean Modal Confirmation -->
+  <div class="modal-overlay" id="clean-modal">
+    <div class="modal">
+      <h3 style="color: #fbbf24;">⚠️ Confirmar Autorização de Limpeza</h3>
+      <p id="clean-modal-text">Você autoriza a realização das operações selecionadas?</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeCleanModal()">Cancelar</button>
+        <button class="btn btn-success" onclick="confirmCleanExecution()">Sim, Executar Exclusão</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let appState = {};
+    let selectedCopiesSet = new Set();
+
+    // Alternar Abas
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+
+      if (tabId === 'recycle') loadRecycleDetails();
+      if (tabId === 'temp') loadTempDetails();
+      if (tabId === 'duplicates') loadDuplicateDetails();
+    }
+
+    // Polling do status
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        appState = data;
+
+        document.getElementById('badge-os').textContent = '🖥️ ' + data.os_name;
+        document.getElementById('badge-git').textContent = '🔄 ' + data.version_info.current_commit;
+        document.getElementById('status-message').textContent = data.status_message;
+        
+        document.getElementById('stat-recycle').textContent = data.recycle_summary.size;
+        document.getElementById('stat-temp').textContent = data.temp_summary.size;
+        document.getElementById('stat-dup').textContent = data.duplicate_summary.wasted;
+        document.getElementById('total-recoverable').textContent = data.total_recoverable_formatted;
+
+        // Progress bar pulse
+        const pb = document.getElementById('progress-bar');
+        if (data.is_scanning || data.is_cleaning) {
+          pb.classList.add('active');
+        } else {
+          pb.classList.remove('active');
+        }
+
+        // Logs
+        const term = document.getElementById('terminal-logs');
+        term.innerHTML = data.logs.map(l => `<div class="terminal-line">${escapeHtml(l)}</div>`).join('');
+        term.scrollTop = term.scrollHeight;
+
+        updateCleanBtnState();
+      } catch (e) {
+        console.error("Erro ao obter status:", e);
+      }
+    }
+
+    function updateCleanBtnState() {
+      const authRecycle = document.getElementById('auth-recycle').checked;
+      const authTemp = document.getElementById('auth-temp').checked;
+      const authDup = document.getElementById('auth-dup').checked;
+
+      const canClean = (authRecycle || authTemp || authDup) && !appState.is_scanning && !appState.is_cleaning;
+      document.getElementById('btn-clean').disabled = !canClean;
+      document.getElementById('btn-clean-hero').disabled = !canClean;
+    }
+
+    async function startScan(type) {
+      await fetch('/api/scan/' + type);
+      fetchStatus();
+    }
+
+    // Carregar detalhes
+    async function loadRecycleDetails() {
+      const res = await fetch('/api/details/recycle');
+      const data = await res.json();
+      const tbody = document.getElementById('tbody-recycle');
+      document.getElementById('recycle-count').textContent = data.items.length;
+      if (!data.items || data.items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted)">Lixeira vazia.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.items.map(it => `
+        <tr>
+          <td><strong>${escapeHtml(it.name)}</strong></td>
+          <td style="color:#60a5fa">${escapeHtml(it.size_formatted)}</td>
+          <td>${escapeHtml(it.type)}</td>
+          <td style="color:var(--text-muted); font-size:11px;">${escapeHtml(it.path)}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadTempDetails() {
+      const res = await fetch('/api/details/temp');
+      const data = await res.json();
+      const tbody = document.getElementById('tbody-temp');
+      document.getElementById('temp-count').textContent = data.items.length;
+      if (!data.items || data.items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted)">Nenhum arquivo temporário encontrado.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.items.map(it => `
+        <tr>
+          <td><strong>${escapeHtml(it.filename)}</strong></td>
+          <td><span class="badge" style="font-size:10px">${escapeHtml(it.category)}</span></td>
+          <td style="color:#60a5fa">${escapeHtml(it.size_formatted)}</td>
+          <td style="font-size:11px; color:var(--text-muted)">${escapeHtml(it.mtime)}</td>
+          <td style="font-size:11px; color:var(--text-muted)">${escapeHtml(it.path)}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadDuplicateDetails() {
+      const res = await fetch('/api/details/duplicates');
+      const data = await res.json();
+      const cont = document.getElementById('dup-tree-container');
+      document.getElementById('dup-count').textContent = data.groups ? data.groups.length : 0;
+      if (!data.groups || data.groups.length === 0) {
+        cont.innerHTML = '<p style="text-align:center; padding:30px; color:var(--text-muted)">Nenhum arquivo duplicado encontrado.</p>';
+        return;
+      }
+
+      cont.innerHTML = data.groups.map((grp, idx) => `
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <strong>📁 Grupo ${idx + 1}: ${escapeHtml(grp.original.name)}</strong>
+            <span style="color:#c084fc; font-weight:700">${escapeHtml(grp.file_size_formatted)} por cópia</span>
+          </div>
+          <div style="font-size: 12px; margin-bottom: 6px; padding: 6px 10px; background: rgba(52, 211, 153, 0.1); border-radius: 6px;">
+            <span class="tag-original">🟢 ORIGINAL (MANTER):</span> ${escapeHtml(grp.original.path)}
+          </div>
+          ${grp.copies.map(c => `
+            <div style="font-size: 12px; margin-left: 12px; display:flex; align-items:center; gap:8px; margin-top:4px;">
+              <input type="checkbox" ${selectedCopiesSet.has(c.path) ? 'checked' : ''} onchange="toggleCopy('${escapeJs(c.path)}', this.checked)">
+              <span class="tag-copy">🔴 CÓPIA:</span> ${escapeHtml(c.path)}
+            </div>
+          `).join('')}
+        </div>
+      `).join('');
+    }
+
+    function toggleCopy(path, checked) {
+      if (checked) selectedCopiesSet.add(path);
+      else selectedCopiesSet.delete(path);
+    }
+
+    function selectAllCopies(selectAll) {
+      selectedCopiesSet.clear();
+      if (selectAll && appState.duplicate_data && appState.duplicate_data.groups) {
+        appState.duplicate_data.groups.forEach(g => {
+          g.copies.forEach(c => selectedCopiesSet.add(c.path));
+        });
+      }
+      loadDuplicateDetails();
+    }
+
+    // Modal de confirmação
+    function openCleanModal() {
+      const authRecycle = document.getElementById('auth-recycle').checked;
+      const authTemp = document.getElementById('auth-temp').checked;
+      const authDup = document.getElementById('auth-dup').checked;
+
+      let msg = "Você está prestes a autorizar as seguintes operações:<br><br>";
+      if (authTemp) msg += `• <strong>Limpeza de Temporários:</strong> ${appState.temp_summary.size}<br>`;
+      if (authRecycle) msg += `• <strong>Esvaziamento da Lixeira:</strong> ${appState.recycle_summary.size}<br>`;
+      if (authDup) msg += `• <strong>Exclusão de Duplicados:</strong> ${selectedCopiesSet.size} cópias selecionadas<br>`;
+      msg += `<br>Espaço total estimado para liberar: <strong style="color:#10b981">${appState.total_recoverable_formatted}</strong>.<br><br>Deseja realmente prosseguir?`;
+
+      document.getElementById('clean-modal-text').innerHTML = msg;
+      document.getElementById('clean-modal').classList.add('active');
+    }
+
+    function closeCleanModal() {
+      document.getElementById('clean-modal').classList.remove('active');
+    }
+
+    async function confirmCleanExecution() {
+      closeCleanModal();
+      const authRecycle = document.getElementById('auth-recycle').checked;
+      const authTemp = document.getElementById('auth-temp').checked;
+      const authDup = document.getElementById('auth-dup').checked;
+
+      await fetch('/api/clean', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auth_temp: authTemp,
+          auth_recycle: authRecycle,
+          auth_duplicates: authDup,
+          selected_copies: Array.from(selectedCopiesSet)
+        })
+      });
+      fetchStatus();
+    }
+
+    // GitHub Updates
+    async function checkForUpdates() {
+      const repo = document.getElementById('repo-input').value;
+      const box = document.getElementById('update-action-box');
+      box.innerHTML = '<span style="color:#60a5fa">Verificando commits no branch main...</span>';
+
+      const res = await fetch('/api/update/check?repo=' + encodeURIComponent(repo));
+      const data = await res.json();
+
+      if (!data.success) {
+        box.innerHTML = `<span style="color:#f87171">Erro: ${escapeHtml(data.error)}</span>`;
+        return;
+      }
+
+      if (data.has_update) {
+        box.innerHTML = `
+          <div style="margin-bottom:8px; color:#34d399; font-weight:700">🚀 Nova versão disponível na main!</div>
+          <div style="font-size:11px; margin-bottom:10px;">Commit: <strong>${escapeHtml(data.latest_sha)}</strong> - "${escapeHtml(data.commit_message)}"</div>
+          <button class="btn btn-primary" onclick="applyUpdate('${escapeJs(data.repo)}')">⬇️ Baixar e Instalar Atualização</button>
+        `;
+      } else {
+        box.innerHTML = `<span style="color:#34d399">✅ Você já está na versão mais recente da main (${data.latest_sha})!</span>`;
+      }
+    }
+
+    async function applyUpdate(repo) {
+      const box = document.getElementById('update-action-box');
+      box.innerHTML = '<span style="color:#60a5fa">Baixando e instalando nova versão do GitHub...</span>';
+      await fetch('/api/update/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repo: repo })
+      });
+    }
+
+    async function saveRepoSetting() {
+      const repo = document.getElementById('repo-input').value;
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ github_repo: repo })
+      });
+      alert("Repositório salvo com sucesso!");
+    }
+
+    function openUpdateModal() {
+      switchTab('update');
+    }
+
+    function filterTable(tableId, query) {
+      const filter = query.toLowerCase();
+      const rows = document.querySelectorAll('#' + tableId + ' tbody tr');
+      rows.forEach(r => {
+        r.style.display = r.textContent.toLowerCase().includes(filter) ? '' : 'none';
+      });
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function escapeJs(str) {
+      return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    // Inicialização
+    setInterval(fetchStatus, 1500);
+    fetchStatus().then(() => {
+      if (appState.version_info) {
+        document.getElementById('repo-input').value = appState.version_info.github_repo || '';
+        document.getElementById('cur-commit-display').textContent = appState.version_info.current_commit;
+      }
+    });
+  </script>
+</body>
+</html>
