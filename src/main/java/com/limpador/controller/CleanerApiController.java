@@ -11,20 +11,25 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Controller REST principal do Limpador-PC Pro.
- * Expõe endpoints para status do sistema, acionamento assíncrono de varreduras,
- * consulta de detalhes, execução segura de limpeza e auto-atualização via GitHub.
+ * Implementa coordenação centralizada de estado (AppState) para evitar conflitos concorrentes,
+ * restrição de CORS para origens locais seguras e validação de escopo na limpeza.
  */
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://127.0.0.1:8080", "http://localhost:8080"})
 public class CleanerApiController {
 
     private static final Logger log = LoggerFactory.getLogger(CleanerApiController.class);
+
+    public enum AppState {
+        IDLE,
+        SCANNING,
+        CLEANING
+    }
 
     private final TempScannerService tempScannerService;
     private final TrashScannerService trashScannerService;
@@ -32,9 +37,8 @@ public class CleanerApiController {
     private final CleanerService cleanerService;
     private final GithubUpdateService updateService;
 
-    // Estado thread-safe para operações concorrentes e chamadas via UI
-    private final AtomicBoolean isScanning = new AtomicBoolean(false);
-    private final AtomicBoolean isCleaning = new AtomicBoolean(false);
+    // Estado único coordenado de execução
+    private final AtomicReference<AppState> appState = new AtomicReference<>(AppState.IDLE);
     private final AtomicReference<String> statusMessage = new AtomicReference<>("Pronto para iniciar.");
     private final AtomicReference<ScanSummary> lastTempSummary = new AtomicReference<>(null);
     private final AtomicReference<ScanSummary> lastTrashSummary = new AtomicReference<>(null);
@@ -72,8 +76,11 @@ public class CleanerApiController {
         resp.put("os_type", PlatformUtils.isWindows() ? "windows" : (PlatformUtils.isMac() ? "macos" : "linux"));
         resp.put("os_name", PlatformUtils.getOsDisplayName());
         resp.put("framework", "Java 21 + Spring Boot 3");
-        resp.put("is_scanning", isScanning.get());
-        resp.put("is_cleaning", isCleaning.get());
+        
+        AppState current = appState.get();
+        resp.put("state", current.name());
+        resp.put("is_scanning", current == AppState.SCANNING);
+        resp.put("is_cleaning", current == AppState.CLEANING);
         resp.put("status_message", statusMessage.get());
 
         long totalRecoverable = 0;
@@ -122,12 +129,8 @@ public class CleanerApiController {
 
     @GetMapping("/scan/all")
     public ResponseEntity<Map<String, Object>> scanAll() {
-        if (!isScanning.compareAndSet(false, true)) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Varredura ou limpeza já em andamento."));
-        }
-        if (isCleaning.get()) {
-            isScanning.set(false);
-            return ResponseEntity.badRequest().body(Map.of("error", "Limpeza em andamento."));
+        if (!appState.compareAndSet(AppState.IDLE, AppState.SCANNING)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Uma operação já está em andamento."));
         }
 
         statusMessage.set("Executando varredura completa...");
@@ -154,9 +157,9 @@ public class CleanerApiController {
                 addLog("Varredura completa concluída com sucesso.");
             } catch (Exception e) {
                 statusMessage.set("Erro na varredura: " + e.getMessage());
-                addLog("Erro: " + e.getMessage());
+                addLog("Erro durante a varredura: " + e.getMessage());
             } finally {
-                isScanning.set(false);
+                appState.set(AppState.IDLE);
             }
         });
 
@@ -165,8 +168,8 @@ public class CleanerApiController {
 
     @GetMapping("/scan/temp")
     public ResponseEntity<Map<String, Object>> scanTemp() {
-        if (!isScanning.compareAndSet(false, true)) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Ocupado."));
+        if (!appState.compareAndSet(AppState.IDLE, AppState.SCANNING)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Uma operação já está em andamento."));
         }
         statusMessage.set("Analisando arquivos temporários...");
         addLog("Iniciando varredura de temporários...");
@@ -177,8 +180,11 @@ public class CleanerApiController {
                 lastTempSummary.set(temp);
                 addLog("Temporários: " + temp.getTotalFiles() + " arquivos (" + temp.getTotalSizeFormatted() + ")");
                 statusMessage.set("Varredura de temporários concluída.");
+            } catch (Exception e) {
+                statusMessage.set("Erro na varredura de temporários: " + e.getMessage());
+                addLog("Erro: " + e.getMessage());
             } finally {
-                isScanning.set(false);
+                appState.set(AppState.IDLE);
             }
         });
         return ResponseEntity.ok(Map.of("success", true));
@@ -186,8 +192,8 @@ public class CleanerApiController {
 
     @GetMapping("/scan/recycle")
     public ResponseEntity<Map<String, Object>> scanRecycle() {
-        if (!isScanning.compareAndSet(false, true)) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Ocupado."));
+        if (!appState.compareAndSet(AppState.IDLE, AppState.SCANNING)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Uma operação já está em andamento."));
         }
         statusMessage.set("Analisando Lixeira...");
         addLog("Iniciando varredura da Lixeira...");
@@ -198,8 +204,11 @@ public class CleanerApiController {
                 lastTrashSummary.set(trash);
                 addLog("Lixeira: " + trash.getTotalFiles() + " itens (" + trash.getTotalSizeFormatted() + ")");
                 statusMessage.set("Varredura da lixeira concluída.");
+            } catch (Exception e) {
+                statusMessage.set("Erro na varredura da lixeira: " + e.getMessage());
+                addLog("Erro: " + e.getMessage());
             } finally {
-                isScanning.set(false);
+                appState.set(AppState.IDLE);
             }
         });
         return ResponseEntity.ok(Map.of("success", true));
@@ -207,8 +216,8 @@ public class CleanerApiController {
 
     @GetMapping("/scan/duplicates")
     public ResponseEntity<Map<String, Object>> scanDuplicates() {
-        if (!isScanning.compareAndSet(false, true)) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Ocupado."));
+        if (!appState.compareAndSet(AppState.IDLE, AppState.SCANNING)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Uma operação já está em andamento."));
         }
         statusMessage.set("Analisando Arquivos Duplicados com SHA-256...");
         addLog("Iniciando varredura de duplicados...");
@@ -219,8 +228,11 @@ public class CleanerApiController {
                 lastDuplicateGroups.set(dups);
                 addLog("Duplicados: " + dups.size() + " grupos encontrados.");
                 statusMessage.set("Varredura de duplicados concluída.");
+            } catch (Exception e) {
+                statusMessage.set("Erro na varredura de duplicados: " + e.getMessage());
+                addLog("Erro: " + e.getMessage());
             } finally {
-                isScanning.set(false);
+                appState.set(AppState.IDLE);
             }
         });
         return ResponseEntity.ok(Map.of("success", true));
@@ -263,19 +275,20 @@ public class CleanerApiController {
 
     @PostMapping("/clean")
     public ResponseEntity<CleanResult> clean(@RequestBody CleanRequest request) {
-        if (!isCleaning.compareAndSet(false, true)) {
-            return ResponseEntity.badRequest().body(new CleanResult(false, 0, 0, 0, List.of("Operação em andamento.")));
-        }
-        if (isScanning.get()) {
-            isCleaning.set(false);
-            return ResponseEntity.badRequest().body(new CleanResult(false, 0, 0, 0, List.of("Varredura em andamento. Aguarde.")));
+        if (!appState.compareAndSet(AppState.IDLE, AppState.CLEANING)) {
+            return ResponseEntity.badRequest().body(new CleanResult(false, 0, 0, 0, List.of("Operação em andamento. Aguarde.")));
         }
 
         statusMessage.set("Executando limpeza autorizada...");
-        addLog("Executando limpeza autorizada pelo usuário...");
+        addLog("Executando limpeza autorizada pelo usuário com validação de escopo...");
 
         try {
-            CleanResult res = cleanerService.clean(request, lastTempSummary.get(), lastTrashSummary.get());
+            CleanResult res = cleanerService.clean(
+                    request,
+                    lastTempSummary.get(),
+                    lastTrashSummary.get(),
+                    lastDuplicateGroups.get()
+            );
             for (String msg : res.getMessages()) {
                 addLog(msg);
             }
@@ -291,9 +304,9 @@ public class CleanerApiController {
         } catch (Exception e) {
             statusMessage.set("Erro durante a limpeza: " + e.getMessage());
             addLog("Erro na limpeza: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(new CleanResult(false, 0, 0, 0, List.of(e.getMessage())));
+            return ResponseEntity.internalServerError().body(new CleanResult(false, 0, 0, 0, List.of("Falha na limpeza: " + e.getMessage())));
         } finally {
-            isCleaning.set(false);
+            appState.set(AppState.IDLE);
         }
     }
 
@@ -309,11 +322,11 @@ public class CleanerApiController {
         addLog("Iniciando auto-atualização pelo GitHub...");
         boolean ok = updateService.applyUpdate(repo);
         if (ok) {
-            addLog("Atualização baixada e aplicada com sucesso a partir do branch main!");
+            addLog("Atualização verificada e aplicada com sucesso a partir do branch main!");
             return ResponseEntity.ok(Map.of("success", true, "message", "Atualizado com sucesso!"));
         } else {
-            addLog("Falha ao aplicar atualização do GitHub.");
-            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Falha na atualização."));
+            addLog("Falha ao aplicar atualização do GitHub: verificação de segurança falhou ou rede indisponível.");
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Falha na atualização de segurança."));
         }
     }
 
@@ -321,9 +334,11 @@ public class CleanerApiController {
     public ResponseEntity<Map<String, Object>> saveSettings(@RequestBody Map<String, String> body) {
         String repo = body.get("github_repo");
         if (repo != null && !repo.isBlank()) {
-            updateService.setCurrentRepo(repo.trim());
-            return ResponseEntity.ok(Map.of("success", true, "message", "Repositório configurado."));
+            boolean valid = updateService.setCurrentRepo(repo.trim());
+            if (valid) {
+                return ResponseEntity.ok(Map.of("success", true, "message", "Repositório configurado."));
+            }
         }
-        return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Repositório inválido."));
+        return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Repositório inválido ou não autorizado."));
     }
 }
