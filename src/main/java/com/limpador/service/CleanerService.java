@@ -11,12 +11,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -55,13 +54,18 @@ public class CleanerService {
                 }
 
                 Path p = Paths.get(item.getPath()).toAbsolutePath().normalize();
-                if (!Files.exists(p) || !Files.isRegularFile(p)) {
+                if (!Files.isRegularFile(p, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(p)) {
                     continue;
                 }
 
                 // Validação de Escopo: O arquivo DEVE residir em uma das pastas temporárias aprovadas
-                boolean withinSafeScope = approvedTempRoots.stream()
-                        .anyMatch(root -> p.startsWith(root.toAbsolutePath().normalize()));
+                boolean withinSafeScope = approvedTempRoots.stream().anyMatch(root -> {
+                    try {
+                        return p.toRealPath().startsWith(root.toRealPath());
+                    } catch (IOException e) {
+                        return false;
+                    }
+                });
 
                 if (!withinSafeScope) {
                     log.warn("Arquivo fora do escopo de pastas temporárias seguras rejeitado: {}", p);
@@ -71,7 +75,7 @@ public class CleanerService {
 
                 // Validação Dupla de Idade (re-checagem no momento da exclusão)
                 try {
-                    BasicFileAttributes attrs = Files.readAttributes(p, BasicFileAttributes.class);
+                    BasicFileAttributes attrs = Files.readAttributes(p, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
                     if (attrs.lastModifiedTime().toInstant().isAfter(safeTimeThreshold)) {
                         log.debug("Arquivo modificado recentemente preservado: {}", p);
                         skipped++;
@@ -110,12 +114,12 @@ public class CleanerService {
             messages.add("Excluindo cópias duplicadas autorizadas...");
 
             // Constrói conjunto de cópias genuinamente identificadas na varredura
-            Set<String> verifiedCopyPaths = new HashSet<>();
+            Map<String, String> verifiedCopyHashes = new HashMap<>();
             if (duplicateGroups != null) {
                 for (DuplicateGroup group : duplicateGroups) {
                     if (group.getCopies() != null) {
                         for (FileItem copy : group.getCopies()) {
-                            verifiedCopyPaths.add(Paths.get(copy.getPath()).toAbsolutePath().normalize().toString());
+                            verifiedCopyHashes.put(Paths.get(copy.getPath()).toAbsolutePath().normalize().toString(), group.getHash());
                         }
                     }
                 }
@@ -125,18 +129,24 @@ public class CleanerService {
                 Path p = Paths.get(copyPath).toAbsolutePath().normalize();
 
                 // Segurança: Recusa qualquer caminho que NÃO foi identificado na varredura
-                if (!verifiedCopyPaths.contains(p.toString())) {
+                String expectedHash = verifiedCopyHashes.get(p.toString());
+                if (expectedHash == null) {
                     log.warn("Tentativa de exclusão bloqueada: caminho não pertence às cópias identificadas: {}", p);
                     skipped++;
                     continue;
                 }
 
-                if (!Files.isRegularFile(p)) {
+                if (!Files.isRegularFile(p, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(p)) {
                     continue;
                 }
 
                 try {
-                    long size = Files.size(p);
+                    BasicFileAttributes attrs = Files.readAttributes(p, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+                    if (attrs.size() < 1024 || !expectedHash.equalsIgnoreCase(sha256(p))) {
+                        skipped++;
+                        continue;
+                    }
+                    long size = attrs.size();
                     if (safeDelete(p)) {
                         deleted++;
                         freedBytes += size;
@@ -153,20 +163,19 @@ public class CleanerService {
         return new CleanResult(true, deleted, skipped, freedBytes, messages);
     }
 
-    /**
-     * Tenta excluir o arquivo apenas se não estiver em uso e sem forçar permissões.
-     * Não altera atributos do sistema operacional (não força setWritable).
-     */
+    private String sha256(Path path) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        try (var input = Files.newInputStream(path)) {
+            byte[] buffer = new byte[65536];
+            int read;
+            while ((read = input.read(buffer)) != -1) digest.update(buffer, 0, read);
+        }
+        return HexFormat.of().formatHex(digest.digest());
+    }
+
+    /** Attempt deletion directly; a write-open is neither a reliable lock check nor harmless. */
     private boolean safeDelete(Path path) {
         try {
-            // Verifica se o arquivo pode ser aberto para escrita (confirmação ativa de lock)
-            try (FileChannel channel = FileChannel.open(path, StandardOpenOption.WRITE)) {
-                // Arquivo livre para manipulação
-            } catch (Exception locked) {
-                log.debug("Arquivo em uso ou com acesso restrito: {}", path);
-                return false;
-            }
-
             Files.deleteIfExists(path);
             return true;
         } catch (IOException | SecurityException e) {

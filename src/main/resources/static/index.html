@@ -745,7 +745,7 @@
     }
 
     async function startScan(type) {
-      await fetch('/api/scan/' + type);
+      await fetch('/api/scan/' + type, { method: 'POST' });
       fetchStatus();
     }
 

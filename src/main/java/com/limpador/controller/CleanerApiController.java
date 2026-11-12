@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -28,7 +30,8 @@ public class CleanerApiController {
     public enum AppState {
         IDLE,
         SCANNING,
-        CLEANING
+        CLEANING,
+        UPDATING
     }
 
     private final TempScannerService tempScannerService;
@@ -36,6 +39,11 @@ public class CleanerApiController {
     private final DuplicateScannerService duplicateScannerService;
     private final CleanerService cleanerService;
     private final GithubUpdateService updateService;
+    private final Executor scanExecutor = Executors.newSingleThreadExecutor(r -> {
+        Thread thread = new Thread(r, "limpador-scan");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     // Estado único coordenado de execução
     private final AtomicReference<AppState> appState = new AtomicReference<>(AppState.IDLE);
@@ -127,7 +135,7 @@ public class CleanerApiController {
         return ResponseEntity.ok(resp);
     }
 
-    @GetMapping("/scan/all")
+    @PostMapping("/scan/all")
     public ResponseEntity<Map<String, Object>> scanAll() {
         if (!appState.compareAndSet(AppState.IDLE, AppState.SCANNING)) {
             return ResponseEntity.badRequest().body(Map.of("error", "Uma operação já está em andamento."));
@@ -161,12 +169,12 @@ public class CleanerApiController {
             } finally {
                 appState.set(AppState.IDLE);
             }
-        });
+        }, scanExecutor);
 
         return ResponseEntity.ok(Map.of("success", true, "message", "Varredura iniciada."));
     }
 
-    @GetMapping("/scan/temp")
+    @PostMapping("/scan/temp")
     public ResponseEntity<Map<String, Object>> scanTemp() {
         if (!appState.compareAndSet(AppState.IDLE, AppState.SCANNING)) {
             return ResponseEntity.badRequest().body(Map.of("error", "Uma operação já está em andamento."));
@@ -186,11 +194,11 @@ public class CleanerApiController {
             } finally {
                 appState.set(AppState.IDLE);
             }
-        });
+        }, scanExecutor);
         return ResponseEntity.ok(Map.of("success", true));
     }
 
-    @GetMapping("/scan/recycle")
+    @PostMapping("/scan/recycle")
     public ResponseEntity<Map<String, Object>> scanRecycle() {
         if (!appState.compareAndSet(AppState.IDLE, AppState.SCANNING)) {
             return ResponseEntity.badRequest().body(Map.of("error", "Uma operação já está em andamento."));
@@ -210,11 +218,11 @@ public class CleanerApiController {
             } finally {
                 appState.set(AppState.IDLE);
             }
-        });
+        }, scanExecutor);
         return ResponseEntity.ok(Map.of("success", true));
     }
 
-    @GetMapping("/scan/duplicates")
+    @PostMapping("/scan/duplicates")
     public ResponseEntity<Map<String, Object>> scanDuplicates() {
         if (!appState.compareAndSet(AppState.IDLE, AppState.SCANNING)) {
             return ResponseEntity.badRequest().body(Map.of("error", "Uma operação já está em andamento."));
@@ -234,7 +242,7 @@ public class CleanerApiController {
             } finally {
                 appState.set(AppState.IDLE);
             }
-        });
+        }, scanExecutor);
         return ResponseEntity.ok(Map.of("success", true));
     }
 
@@ -304,7 +312,7 @@ public class CleanerApiController {
         } catch (Exception e) {
             statusMessage.set("Erro durante a limpeza: " + e.getMessage());
             addLog("Erro na limpeza: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(new CleanResult(false, 0, 0, 0, List.of("Falha na limpeza: " + e.getMessage())));
+            return ResponseEntity.internalServerError().body(new CleanResult(false, 0, 0, 0, List.of("Falha na limpeza. Consulte o log local para detalhes.")));
         } finally {
             appState.set(AppState.IDLE);
         }
@@ -318,15 +326,21 @@ public class CleanerApiController {
 
     @PostMapping("/update/apply")
     public ResponseEntity<Map<String, Object>> applyUpdate(@RequestBody Map<String, String> body) {
+        if (!appState.compareAndSet(AppState.IDLE, AppState.UPDATING)) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Outra operação está em andamento."));
+        }
         String repo = body.get("repo");
-        addLog("Iniciando auto-atualização pelo GitHub...");
-        boolean ok = updateService.applyUpdate(repo);
-        if (ok) {
-            addLog("Atualização verificada e aplicada com sucesso a partir do branch main!");
-            return ResponseEntity.ok(Map.of("success", true, "message", "Atualizado com sucesso!"));
-        } else {
+        try {
+            addLog("Iniciando auto-atualização pelo GitHub...");
+            boolean ok = updateService.applyUpdate(repo);
+            if (ok) {
+                addLog("Atualização aplicada; reinicie o aplicativo para carregar os arquivos atualizados.");
+                return ResponseEntity.ok(Map.of("success", true, "message", "Atualizado. Reinicie o aplicativo para carregar a nova versão."));
+            }
             addLog("Falha ao aplicar atualização do GitHub: verificação de segurança falhou ou rede indisponível.");
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Falha na atualização de segurança."));
+        } finally {
+            appState.set(AppState.IDLE);
         }
     }
 
