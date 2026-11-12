@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Limpador-PC | Otimizador Multiplataforma</title>
+  <title>Limpador-PC Pro | Java Spring Boot Edition</title>
   <style>
     :root {
       --bg: #0b0f19;
@@ -53,12 +53,12 @@
       font-size: 24px;
       width: 42px;
       height: 42px;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      background: linear-gradient(135deg, #f97316, #ef4444);
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+      box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
     }
     .logo-text h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
     .logo-text p { font-size: 11px; color: var(--text-muted); }
@@ -75,6 +75,7 @@
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--card-border);
     }
+    .badge-java { color: #f97316; }
     .badge-os { color: #60a5fa; }
     .badge-git { color: #c084fc; cursor: pointer; transition: 0.2s; }
     .badge-git:hover { background: rgba(192, 132, 252, 0.15); }
@@ -133,7 +134,7 @@
       gap: 20px;
     }
     .hero-info h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
-    .hero-info p { color: var(--text-muted); font-size: 13px; max-width: 580px; }
+    .hero-info p { color: var(--text-muted); font-size: 13px; max-width: 620px; }
     
     .btn-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
     
@@ -188,7 +189,7 @@
     .progress-fill {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      background: linear-gradient(90deg, #f97316, #3b82f6);
       transition: width 0.3s;
     }
     .progress-fill.active {
@@ -316,8 +317,6 @@
       line-height: 1.6;
     }
     .terminal-line { margin-bottom: 2px; }
-    .terminal-line.success { color: #34d399; }
-    .terminal-line.err { color: #f87171; }
 
     /* Modal */
     .modal-overlay {
@@ -350,13 +349,14 @@
   <!-- Top Header -->
   <header>
     <div class="logo-box">
-      <div class="logo-icon">🧹</div>
+      <div class="logo-icon">☕</div>
       <div class="logo-text">
         <h1>Limpador-PC Pro</h1>
-        <p>Otimizador & Varredura Multiplataforma</p>
+        <p>Spring Boot 3 + Java 21 Multiplataforma</p>
       </div>
     </div>
     <div class="header-pills">
+      <div class="badge badge-java">☕ Spring Boot 3 / Java 21</div>
       <div class="badge badge-os" id="badge-os">🖥️ Detectando SO...</div>
       <div class="badge badge-git" id="badge-git" onclick="openUpdateModal()" title="Clique para verificar atualizações no GitHub">
         🔄 v1.0.0 (main)
@@ -378,8 +378,8 @@
     <!-- Hero / Control Action Bar -->
     <section class="hero-panel">
       <div class="hero-info">
-        <h2>Painel de Otimização</h2>
-        <p>Varra seu computador em busca de arquivos mortos, lixeira e duplicados com confirmação prévia antes de qualquer exclusão.</p>
+        <h2>Painel de Otimização Inteligente</h2>
+        <p>Varre pastas de arquivos mortos (%TEMP%, relatórios CrashDumps, caches seguros), esvazia a lixeira e elimina duplicados idênticos via SHA-256 com total confirmação prévia.</p>
         <div class="status-box">
           <div class="status-text" id="status-message">Pronto para iniciar.</div>
           <div class="progress-track">
@@ -422,11 +422,11 @@
         <div class="card">
           <div>
             <div class="card-top">
-              <span class="card-title">Arquivos Temporários</span>
+              <span class="card-title">Arquivos Temporários & Caches</span>
               <div class="card-icon icon-temp">⚡</div>
             </div>
             <div class="card-stat" id="stat-temp">0 B</div>
-            <p class="card-desc">Caches e arquivos mortos deixados por programas e instaladores. 100% seguro para excluir.</p>
+            <p class="card-desc">Varre %TEMP%, CrashDumps e resíduos inativos. Arquivos em uso são preservados automaticamente.</p>
           </div>
           <div class="card-auth">
             <label class="checkbox-label">
@@ -445,7 +445,7 @@
               <div class="card-icon icon-dup">👥</div>
             </div>
             <div class="card-stat" id="stat-dup">0 B</div>
-            <p class="card-desc">Cópias idênticas confirmadas por SHA-256. O arquivo original é sempre mantido.</p>
+            <p class="card-desc">Cópias idênticas confirmadas por SHA-256. O arquivo original é sempre protegido.</p>
           </div>
           <div class="card-auth">
             <label class="checkbox-label">
@@ -535,7 +535,7 @@
       <div class="hero-panel">
         <div style="max-width: 650px;">
           <h2>🔄 Atualização Automática via GitHub</h2>
-          <p>Toda vez que você enviar um commit para o branch <strong>main</strong> no seu GitHub, você ou qualquer pessoa que baixar o app pode clicar em verificar e instalar a versão mais nova na máquina sem perder nada!</p>
+          <p>Toda vez que você enviar um commit para o branch <strong>main</strong> no seu repositório GitHub, qualquer usuário pode clicar em verificar e atualizar a aplicação instantaneamente!</p>
           
           <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 10px;">
             <label style="font-size: 12px; color: var(--text-muted);">Repositório GitHub Configurado (usuário/repositório):</label>
@@ -547,11 +547,11 @@
           </div>
         </div>
 
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 18px; min-width: 280px;" id="update-status-card">
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 18px; min-width: 280px;">
           <div style="font-size: 12px; color: var(--text-muted);">Versão Atual:</div>
-          <div style="font-size: 16px; font-weight: 700; margin: 4px 0 12px 0;" id="cur-commit-display">initial-v1.0.0</div>
+          <div style="font-size: 16px; font-weight: 700; margin: 4px 0 12px 0;" id="cur-commit-display">v1.0.0-java</div>
           <div id="update-action-box">
-            <span style="font-size: 12px; color: #94a3b8;">Clique em verificar atualizações acima.</span>
+            <span style="font-size: 12px; color: #94a3b8;">Clique em verificar atualizações ao lado.</span>
           </div>
         </div>
       </div>
@@ -560,10 +560,10 @@
     <!-- Tab 6: Logs -->
     <div class="tab-content" id="tab-logs">
       <div class="panel-table-header" style="background: var(--card-bg); border: 1px solid var(--card-border); border-bottom: none; border-radius: 16px 16px 0 0;">
-        <h3>📝 Console do Sistema em Tempo Real</h3>
+        <h3>📝 Console do Sistema em Tempo Real (Spring Boot)</h3>
       </div>
       <div class="terminal" id="terminal-logs">
-        <div class="terminal-line">[00:00:00] Sistema inicializado com sucesso.</div>
+        <div class="terminal-line">[00:00:00] Sistema Spring Boot inicializado com sucesso.</div>
       </div>
     </div>
   </main>
@@ -584,7 +584,6 @@
     let appState = {};
     let selectedCopiesSet = new Set();
 
-    // Alternar Abas
     function switchTab(tabId) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -596,7 +595,6 @@
       if (tabId === 'duplicates') loadDuplicateDetails();
     }
 
-    // Polling do status
     async function fetchStatus() {
       try {
         const res = await fetch('/api/status');
@@ -604,7 +602,6 @@
         appState = data;
 
         document.getElementById('badge-os').textContent = '🖥️ ' + data.os_name;
-        document.getElementById('badge-git').textContent = '🔄 ' + data.version_info.current_commit;
         document.getElementById('status-message').textContent = data.status_message;
         
         document.getElementById('stat-recycle').textContent = data.recycle_summary.size;
@@ -612,7 +609,6 @@
         document.getElementById('stat-dup').textContent = data.duplicate_summary.wasted;
         document.getElementById('total-recoverable').textContent = data.total_recoverable_formatted;
 
-        // Progress bar pulse
         const pb = document.getElementById('progress-bar');
         if (data.is_scanning || data.is_cleaning) {
           pb.classList.add('active');
@@ -620,10 +616,11 @@
           pb.classList.remove('active');
         }
 
-        // Logs
         const term = document.getElementById('terminal-logs');
-        term.innerHTML = data.logs.map(l => `<div class="terminal-line">${escapeHtml(l)}</div>`).join('');
-        term.scrollTop = term.scrollHeight;
+        if (data.logs) {
+          term.innerHTML = data.logs.map(l => `<div class="terminal-line">${escapeHtml(l)}</div>`).join('');
+          term.scrollTop = term.scrollHeight;
+        }
 
         updateCleanBtnState();
       } catch (e) {
@@ -646,21 +643,20 @@
       fetchStatus();
     }
 
-    // Carregar detalhes
     async function loadRecycleDetails() {
       const res = await fetch('/api/details/recycle');
       const data = await res.json();
       const tbody = document.getElementById('tbody-recycle');
-      document.getElementById('recycle-count').textContent = data.items.length;
+      document.getElementById('recycle-count').textContent = data.items ? data.items.length : 0;
       if (!data.items || data.items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted)">Lixeira vazia.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted)">Lixeira vazia ou não escaneada.</td></tr>';
         return;
       }
       tbody.innerHTML = data.items.map(it => `
         <tr>
-          <td><strong>${escapeHtml(it.name)}</strong></td>
-          <td style="color:#60a5fa">${escapeHtml(it.size_formatted)}</td>
-          <td>${escapeHtml(it.type)}</td>
+          <td><strong>${escapeHtml(it.name || it.filename)}</strong></td>
+          <td style="color:#60a5fa">${escapeHtml(it.sizeFormatted)}</td>
+          <td>${escapeHtml(it.category || 'Arquivo')}</td>
           <td style="color:var(--text-muted); font-size:11px;">${escapeHtml(it.path)}</td>
         </tr>
       `).join('');
@@ -670,16 +666,16 @@
       const res = await fetch('/api/details/temp');
       const data = await res.json();
       const tbody = document.getElementById('tbody-temp');
-      document.getElementById('temp-count').textContent = data.items.length;
+      document.getElementById('temp-count').textContent = data.items ? data.items.length : 0;
       if (!data.items || data.items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted)">Nenhum arquivo temporário encontrado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted)">Nenhum arquivo temporário carregado.</td></tr>';
         return;
       }
       tbody.innerHTML = data.items.map(it => `
         <tr>
           <td><strong>${escapeHtml(it.filename)}</strong></td>
           <td><span class="badge" style="font-size:10px">${escapeHtml(it.category)}</span></td>
-          <td style="color:#60a5fa">${escapeHtml(it.size_formatted)}</td>
+          <td style="color:#60a5fa">${escapeHtml(it.sizeFormatted)}</td>
           <td style="font-size:11px; color:var(--text-muted)">${escapeHtml(it.mtime)}</td>
           <td style="font-size:11px; color:var(--text-muted)">${escapeHtml(it.path)}</td>
         </tr>
@@ -699,8 +695,8 @@
       cont.innerHTML = data.groups.map((grp, idx) => `
         <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); border-radius: 12px; padding: 14px; margin-bottom: 12px;">
           <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-            <strong>📁 Grupo ${idx + 1}: ${escapeHtml(grp.original.name)}</strong>
-            <span style="color:#c084fc; font-weight:700">${escapeHtml(grp.file_size_formatted)} por cópia</span>
+            <strong>📁 Grupo ${idx + 1}: ${escapeHtml(grp.original.filename)}</strong>
+            <span style="color:#c084fc; font-weight:700">${escapeHtml(grp.fileSizeFormatted)} por cópia</span>
           </div>
           <div style="font-size: 12px; margin-bottom: 6px; padding: 6px 10px; background: rgba(52, 211, 153, 0.1); border-radius: 6px;">
             <span class="tag-original">🟢 ORIGINAL (MANTER):</span> ${escapeHtml(grp.original.path)}
@@ -722,22 +718,23 @@
 
     function selectAllCopies(selectAll) {
       selectedCopiesSet.clear();
-      if (selectAll && appState.duplicate_data && appState.duplicate_data.groups) {
-        appState.duplicate_data.groups.forEach(g => {
-          g.copies.forEach(c => selectedCopiesSet.add(c.path));
-        });
-      }
-      loadDuplicateDetails();
+      fetch('/api/details/duplicates').then(r => r.json()).then(data => {
+        if (selectAll && data.groups) {
+          data.groups.forEach(g => {
+            g.copies.forEach(c => selectedCopiesSet.add(c.path));
+          });
+        }
+        loadDuplicateDetails();
+      });
     }
 
-    // Modal de confirmação
     function openCleanModal() {
       const authRecycle = document.getElementById('auth-recycle').checked;
       const authTemp = document.getElementById('auth-temp').checked;
       const authDup = document.getElementById('auth-dup').checked;
 
       let msg = "Você está prestes a autorizar as seguintes operações:<br><br>";
-      if (authTemp) msg += `• <strong>Limpeza de Temporários:</strong> ${appState.temp_summary.size}<br>`;
+      if (authTemp) msg += `• <strong>Limpeza de Temporários & Caches:</strong> ${appState.temp_summary.size}<br>`;
       if (authRecycle) msg += `• <strong>Esvaziamento da Lixeira:</strong> ${appState.recycle_summary.size}<br>`;
       if (authDup) msg += `• <strong>Exclusão de Duplicados:</strong> ${selectedCopiesSet.size} cópias selecionadas<br>`;
       msg += `<br>Espaço total estimado para liberar: <strong style="color:#10b981">${appState.total_recoverable_formatted}</strong>.<br><br>Deseja realmente prosseguir?`;
@@ -760,16 +757,15 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          auth_temp: authTemp,
-          auth_recycle: authRecycle,
-          auth_duplicates: authDup,
-          selected_copies: Array.from(selectedCopiesSet)
+          authTemp: authTemp,
+          authRecycle: authRecycle,
+          authDuplicates: authDup,
+          selectedCopies: Array.from(selectedCopiesSet)
         })
       });
       fetchStatus();
     }
 
-    // GitHub Updates
     async function checkForUpdates() {
       const repo = document.getElementById('repo-input').value;
       const box = document.getElementById('update-action-box');
@@ -783,25 +779,26 @@
         return;
       }
 
-      if (data.has_update) {
+      if (data.hasUpdate) {
         box.innerHTML = `
-          <div style="margin-bottom:8px; color:#34d399; font-weight:700">🚀 Nova versão disponível na main!</div>
-          <div style="font-size:11px; margin-bottom:10px;">Commit: <strong>${escapeHtml(data.latest_sha)}</strong> - "${escapeHtml(data.commit_message)}"</div>
+          <div style="margin-bottom:8px; color:#34d399; font-weight:700">🚀 Nova versão disponível no branch main!</div>
+          <div style="font-size:11px; margin-bottom:10px;">Commit: <strong>${escapeHtml(data.latestCommit)}</strong> - "${escapeHtml(data.commitMessage)}"</div>
           <button class="btn btn-primary" onclick="applyUpdate('${escapeJs(data.repo)}')">⬇️ Baixar e Instalar Atualização</button>
         `;
       } else {
-        box.innerHTML = `<span style="color:#34d399">✅ Você já está na versão mais recente da main (${data.latest_sha})!</span>`;
+        box.innerHTML = `<span style="color:#34d399">✅ Você já está na versão mais recente da main (${data.latestCommit})!</span>`;
       }
     }
 
     async function applyUpdate(repo) {
       const box = document.getElementById('update-action-box');
-      box.innerHTML = '<span style="color:#60a5fa">Baixando e instalando nova versão do GitHub...</span>';
+      box.innerHTML = '<span style="color:#60a5fa">Baixando e atualizando arquivos pelo GitHub...</span>';
       await fetch('/api/update/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ repo: repo })
       });
+      fetchStatus();
     }
 
     async function saveRepoSetting() {
@@ -833,14 +830,8 @@
       return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
     }
 
-    // Inicialização
     setInterval(fetchStatus, 1500);
-    fetchStatus().then(() => {
-      if (appState.version_info) {
-        document.getElementById('repo-input').value = appState.version_info.github_repo || '';
-        document.getElementById('cur-commit-display').textContent = appState.version_info.current_commit;
-      }
-    });
+    fetchStatus();
   </script>
 </body>
 </html>

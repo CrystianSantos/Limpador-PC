@@ -1,124 +1,126 @@
-# 🧹 Limpador-PC Pro | Multiplatform Cleaner & Optimizer
+# 🧹 Limpador-PC Pro | Java Spring Boot Edition
 
 <p align="center">
+  <img src="https://img.shields.io/badge/Java-21%20LTS-orange?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21" />
+  <img src="https://img.shields.io/badge/Spring%20Boot-3.2%2B-green?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot" />
   <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=for-the-badge&logo=windows&logoColor=white" alt="Platforms" />
-  <img src="https://img.shields.io/badge/Python-3.10%2B-green?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
-  <img src="https://img.shields.io/badge/Build-PyInstaller%20Standalone-purple?style=for-the-badge" alt="Build" />
-  <img src="https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-orange?style=for-the-badge&logo=githubactions&logoColor=white" alt="GitHub Actions" />
+  <img src="https://img.shields.io/badge/Security-Safe%20Buffer%20%26%20Lock%20Check-success?style=for-the-badge" alt="Security" />
 </p>
 
-Uma ferramenta moderna, transparente e **multiplataforma (Windows, macOS e Linux)** para varredura e limpeza segura de arquivos temporários, lixeira e cópias duplicadas com verificação criptográfica **SHA-256**, interface moderna e **sistema de auto-atualização direta pelo GitHub**.
+Reimplementação completa do **Limpador-PC** em **Java 21 com Spring Boot 3**, projetado para máxima compatibilidade multiplataforma nativa (Windows, macOS e Linux), varredura inteligente de pastas temporárias ampliadas sem afetar programas em execução, detecção de duplicados criptográfica via **SHA-256** e auto-atualização contínua pelo GitHub.
 
 ---
 
-## ✨ Principais Diferenciais
+## 🎯 Por que a versão em Java com Spring Boot?
 
-1. **🖥️ Multiplataforma Real (Windows, macOS e Linux)**:
-   - **Windows**: Varre `%TEMP%`, `C:\Windows\Temp`, `CrashDumps` e Lixeira nativa via Shell32 / PowerShell.
-   - **macOS**: Varre `$TMPDIR`, `~/Library/Caches`, `/tmp` e a lixeira `~/.Trash` (via AppleScript Finder).
-   - **Linux**: Varre `/tmp`, `/var/tmp`, `~/.cache` e Lixeira padrão FreeDesktop (`~/.local/share/Trash`).
-
-2. **🎨 Nova Interface Visual Moderna**:
-   - Desenvolvida com design moderno (Glassmorphism, Dark Theme, visual limpo estilo SaaS/Linear/CleanMyMac).
-   - Abre como uma **janela de aplicativo desktop nativa** (sem barra de URL do navegador ou abas).
-   - Gráficos em tempo real, tabelas pesquisáveis e painel de autorização prévia.
-
-3. **🛡️ 100% Seguro e Transparente**:
-   - **Nenhum arquivo é apagado sem sua autorização explícita**.
-   - Arquivos atualmente em uso por navegadores ou programas abertos são **ignorados e preservados automaticamente**.
-   - Na detecção de duplicados, o arquivo **original mais antigo é protegido**, permitindo escolher quais cópias excluir.
-
-4. **🔄 Sistema de Auto-Atualização via GitHub (Branch `main`)**:
-   - Conta com botão integrado na interface para verificar novos commits no seu repositório GitHub.
-   - Toda vez que você fizer `git push` para a `main`, quem estiver usando o app clica em **"Verificar Atualizações"** e instala a versão mais recente em 1 clique, sem perder configurações locais!
-
-5. **📦 Executável Standalone Único (`.exe` no Windows / Binário no Linux e Mac)**:
-   - Não requer que o usuário final instale Python ou dependências.
-   - Inclui GitHub Actions pronto (`.github/workflows/build.yml`) que compila automaticamente os executáveis para Windows, Mac e Linux em cada Release!
+1. **☕ Multiplataforma Nativa Real (Write Once, Run Anywhere)**:
+   - Roda exatamente da mesma forma no **Windows**, **macOS** e **Linux** sem necessidade de compilação condicional ou bibliotecas nativas proprietárias.
+2. **⚡ Arquitetura Spring Boot 3 Robusta**:
+   - Backend desacoplado com serviços Spring (`@Service`), injeção de dependências e endpoints REST modernos (`@RestController`).
+   - Interface web moderna integrada (HTML5, CSS3 Glassmorphism, Vanilla JS) servida pelo Tomcat embutido na porta `8080`.
+   - Abre automaticamente como **janela de aplicativo desktop nativa** ao iniciar.
+3. **🛡️ Varredura Ampliada e 100% Segura de Temporários**:
+   - **Além do `%TEMP%`**, o sistema agora também analisa de forma segura:
+     - 💥 **Relatórios de Falhas de Programas (CrashDumps)**: Arquivos de despejo de memória deixados por programas que já fecharam.
+     - 🌐 **Cache de Rede do Windows (INetCache)**: Resíduos temporários de conexões antigas.
+     - 📦 **Resíduos de Instaladores Antigos**: Pastas temporárias criadas por instaladores concluídos.
+     - 🍎 **macOS**: `$TMPDIR`, `~/Library/Caches`, `~/Library/Logs`.
+     - 🐧 **Linux**: `~/.cache`, `/tmp`, `/var/tmp`.
+   - **Dupla Camada de Proteção Ativa**:
+     - 🔒 **Detecção de Bloqueio**: Se qualquer arquivo estiver aberto ou bloqueado por um programa em execução (Word, Chrome, etc.), ele é **ignorado e preservado imediatamente**.
+     - ⏱️ **Buffer de Idade Segura (Safe Age Buffer)**: Arquivos modificados nos últimos 5 minutos são poupados para garantir que instalações ou processos recentes não sejam interrompidos.
+4. **👥 Detecção Criptográfica de Duplicados (SHA-256)**:
+   - Triagem rápida por tamanho $\rightarrow$ Hash de cabeçalho de 8 KB $\rightarrow$ Confirmação bit a bit com hash SHA-256 nativo do Java (`MessageDigest`).
+   - O arquivo original mais antigo é **automaticamente protegido** (Manter), listando apenas as cópias para remoção.
+5. **🔄 Auto-Atualização Direta do GitHub (Branch `main`)**:
+   - O serviço `GithubUpdateService` consulta a API do GitHub com Java `HttpClient`, avisa sobre novos commits na `main` e permite atualizar os arquivos da aplicação em 1 clique!
 
 ---
 
 ## 🚀 Como Executar
 
-### Opção 1: Pelo Executável Standalone (Recomendado para usuários)
-Basta dar **duplo clique** no arquivo compilado:
-👉 **`Limpador-PC.exe`** (disponível na pasta `dist/` ou na Área de Trabalho).
+### Pré-requisitos
+* Java JDK 17 ou superior (Recomendado: Java 21 LTS).
 
-### Opção 2: Pelo Código-Fonte em Qualquer Sistema (Windows, Mac ou Linux)
+### No Windows:
+Basta dar **duplo clique** no arquivo:
+👉 **`Executar_Limpador_Java.bat`**
+
+### No macOS / Linux:
 ```bash
-# Clone o repositório
-git clone https://github.com/SEU-USUARIO/Limpador-PC.git
-cd Limpador-PC
-
-# Execute diretamente (zero dependências obrigatórias!)
-python main.py
+chmod +x executar_limpador.sh
+./executar_limpador.sh
 ```
 
-### Outros Modos de Inicialização:
-* `python main.py` -> Abre a interface visual desktop moderna.
-* `python main.py --cli` -> Abre o modo interativo pelo terminal (console wizard).
-* `python main.py --tkinter` -> Abre a interface clássica em Tkinter.
+### Via Maven:
+```bash
+mvn spring-boot:run
+```
+
+A interface abrirá automaticamente no endereço: `http://127.0.0.1:8080`.
 
 ---
 
-## 🛠️ Como Publicar no Seu GitHub
-
-Para publicar este projeto no seu GitHub pessoal e habilitar as atualizações automáticas:
-
-1. **Crie um repositório vazio no GitHub**:
-   - Acesse [github.com/new](https://github.com/new).
-   - Nomeie como `Limpador-PC` (público).
-
-2. **Inicie o Git e faça o primeiro envio**:
-   ```bash
-   cd C:\Users\crystian\Desktop\Limpador_PC
-   git init
-   git add .
-   git commit -m "feat: versão inicial multiplataforma v1.0.0"
-   git branch -M main
-   git remote add origin https://github.com/SEU-USUARIO/Limpador-PC.git
-   git push -u origin main
-   ```
-
-3. **Configure seu repositório no aplicativo**:
-   - No app, vá na aba **"Atualizações GitHub"** e digite `SEU-USUARIO/Limpador-PC`.
-   - Pronto! Qualquer commit enviado para a `main` poderá ser instalado pelos usuários clicando em **"Verificar Atualizações"** -> **"Baixar e Instalar"**!
-
----
-
-## 🔨 Como Compilar o Executável Localmente
-
-Se você fizer alterações no código e quiser gerar um novo `.exe` standalone:
+## 🔨 Como Compilar o Pacote Executável (`JAR`)
 
 ```bash
-# Instale o PyInstaller (caso ainda não tenha)
-pip install pyinstaller
-
-# Execute o script de compilação automática
-python build_executable.py
+mvn clean package
 ```
-O arquivo final compilado estará na pasta `dist/Limpador-PC.exe`.
+O pacote executável será gerado em:
+📁 `target/limpador-pc-1.0.0.jar`
+
+Para rodar o JAR diretamente em qualquer sistema operacional:
+```bash
+java -jar target/limpador-pc-1.0.0.jar
+```
 
 ---
 
-## 📁 Estrutura de Arquivos
+## 🌐 Publicando no GitHub e CI/CD Automático
+
+O projeto já inclui a automação configurada em `.github/workflows/build-java.yml`. Toda vez que você fizer `push` para a `main` no seu GitHub, o GitHub Actions:
+1. Compila o projeto no **Windows, Ubuntu e macOS**.
+2. Roda a suíte de testes automatizados com JUnit 5.
+3. Disponibiliza os downloads dos pacotes executáveis para download na aba **Releases** do repositório!
+
+```bash
+git init
+git add .
+git commit -m "feat: migração completa para Java 21 com Spring Boot 3"
+git branch -M main
+git remote add origin https://github.com/SEU-USUARIO/Limpador-PC.git
+git push -u origin main
+```
+
+---
+
+## 📁 Estrutura do Projeto
 
 ```text
-├── .github/workflows/
-│   └── build.yml               # CI/CD automático para Windows, Mac e Linux
-├── web/
-│   └── index.html              # Interface moderna Glassmorphism Desktop
-├── platform_utils.py           # Abstração de SO (Windows, macOS, Linux)
-├── scanner.py                  # Varredura inteligente (Temp, Lixeira, Duplicados)
-├── cleaner.py                  # Exclusão segura com preservação de arquivos em uso
-├── updater.py                  # Motor de auto-atualização via GitHub API
-├── web_server.py               # Servidor e API REST local nativa
-├── app_launcher.py             # Inicializador da janela de aplicativo desktop
-├── main.py                     # Ponto de entrada com seleção de modos
-├── build_executable.py         # Script de compilação PyInstaller
-├── version.json                # Metadados e controle de versão do GitHub
-├── requirements.txt            # Dependências opcionais de desenvolvimento
-└── README.md                   # Documentação completa
+├── src/
+│   ├── main/
+│   │   ├── java/com/limpador/
+│   │   │   ├── LimpadorApplication.java        # Entry point Spring Boot e Launcher Desktop
+│   │   │   ├── controller/
+│   │   │   │   ├── CleanerApiController.java    # REST API dos serviços de limpeza e varredura
+│   │   │   │   └── WebViewController.java       # Roteamento da interface
+│   │   │   ├── service/
+│   │   │   │   ├── TempScannerService.java      # Varredura inteligente de %TEMP% e caches seguros
+│   │   │   │   ├── TrashScannerService.java     # Esvaziamento de Lixeira Multiplataforma
+│   │   │   │   ├── DuplicateScannerService.java # Algoritmo de duplicados SHA-256 em 3 fases
+│   │   │   │   ├── CleanerService.java          # Exclusão segura com preservação de travamento
+│   │   │   │   └── GithubUpdateService.java     # Motor de auto-atualização pelo GitHub
+│   │   │   ├── model/                           # DTOs e entidades de transferência de dados
+│   │   │   └── util/                            # Utilitários de SO e formatação de bytes
+│   │   └── resources/
+│   │       ├── application.properties           # Configurações do servidor Spring Boot
+│   │       └── static/index.html                # Interface moderna Glassmorphism integrada
+│   └── test/
+│       └── java/com/limpador/                   # Testes unitários JUnit 5
+├── .github/workflows/build-java.yml             # Workflow CI/CD multiplataforma
+├── pom.xml                                      # Configuração Maven e dependências
+├── Executar_Limpador_Java.bat                   # Launcher para Windows
+└── executar_limpador.sh                         # Launcher para macOS / Linux
 ```
 
 ---

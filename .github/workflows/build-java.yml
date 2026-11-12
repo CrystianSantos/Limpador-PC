@@ -1,0 +1,70 @@
+name: Build Java Spring Boot Multiplataforma
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Compilar Spring Boot para ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: Limpador-PC-Windows.jar
+          - os: ubuntu-latest
+            artifact_name: Limpador-PC-Linux.jar
+          - os: macos-latest
+            artifact_name: Limpador-PC-macOS.jar
+
+    steps:
+    - name: Baixar código do repositório
+      uses: actions/checkout@v4
+
+    - name: Configurar JDK 21 (Zulu LTS)
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'zulu'
+        cache: 'maven'
+
+    - name: Compilar e Executar Testes com Maven
+      run: mvn clean package -DskipTests=false
+
+    - name: Renomear JAR para distribuição
+      shell: bash
+      run: |
+        cp target/limpador-pc-1.0.0.jar target/${{ matrix.artifact_name }}
+
+    - name: Upload do Artefato
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: target/${{ matrix.artifact_name }}
+
+  release:
+    name: Publicar Release no GitHub
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    steps:
+    - name: Baixar todos os artefatos
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Criar GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          artifacts/Limpador-PC-Windows.jar/Limpador-PC-Windows.jar
+          artifacts/Limpador-PC-Linux.jar/Limpador-PC-Linux.jar
+          artifacts/Limpador-PC-macOS.jar/Limpador-PC-macOS.jar
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

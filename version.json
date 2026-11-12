@@ -1,8 +1,0 @@
-{
-  "app_name": "Limpador-PC Multiplataforma",
-  "version": "1.0.0",
-  "github_repo": "crystian/Limpador-PC",
-  "current_commit": "initial-v1.0.0",
-  "branch": "main",
-  "description": "Otimizador e Varredura de Arquivos Multiplataforma para Windows, macOS e Linux"
-}
