@@ -93,8 +93,8 @@ public class LimpadorApplicationTests {
     }
 
     @Test
-    @DisplayName("Teste do Mecanismo de Limpeza Segura (CleanerService)")
-    void testCleanerService(@TempDir Path tempDir) throws IOException {
+    @DisplayName("CleanerService preserva temporários fora do escopo autorizado")
+    void testCleanerServicePreservesFilesOutsideApprovedTempRoots(@TempDir Path tempDir) throws IOException {
         Path tempFile = tempDir.resolve("lixo_temporario.tmp");
         Files.write(tempFile, "dados que podem ser apagados".getBytes());
 
@@ -126,8 +126,9 @@ public class LimpadorApplicationTests {
         CleanResult result = cleaner.clean(req, tempSummary, null);
 
         assertTrue(result.isSuccess());
-        assertEquals(1, result.getDeletedCount());
-        assertFalse(Files.exists(tempFile), "Arquivo temporário deve ter sido excluído com sucesso");
+        assertEquals(0, result.getDeletedCount());
+        assertEquals(1, result.getSkippedCount());
+        assertTrue(Files.exists(tempFile), "Arquivo fora das pastas temporárias autorizadas deve ser preservado");
     }
 
     @Test

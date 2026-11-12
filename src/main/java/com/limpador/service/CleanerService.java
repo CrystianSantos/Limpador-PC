@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -30,6 +31,11 @@ public class CleanerService {
 
     private static final Logger log = LoggerFactory.getLogger(CleanerService.class);
     private static final int SAFE_BUFFER_MINUTES = 5;
+
+    /** Backwards-compatible entry point for callers that do not have duplicate scan results. */
+    public CleanResult clean(CleanRequest request, ScanSummary tempSummary, ScanSummary trashSummary) {
+        return clean(request, tempSummary, trashSummary, null);
+    }
 
     public CleanResult clean(
             CleanRequest request,
