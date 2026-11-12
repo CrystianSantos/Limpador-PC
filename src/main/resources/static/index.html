@@ -401,17 +401,18 @@
       <div class="badge badge-git" id="badge-git" onclick="openUpdateModal()" title="Clique para verificar atualizações no GitHub">
         🔄 v1.0.0 (main)
       </div>
+      <button class="btn btn-secondary" id="btn-shutdown" onclick="requestShutdown()" title="Encerrar o Limpador-PC">⏻ Sair</button>
     </div>
   </header>
 
   <!-- Navigation -->
   <nav>
-    <button class="tab-btn active" onclick="switchTab('overview')">📊 Visão Geral</button>
-    <button class="tab-btn" onclick="switchTab('recycle')">🗑️ Lixeira</button>
-    <button class="tab-btn" onclick="switchTab('temp')">⚡ Arquivos Temporários</button>
-    <button class="tab-btn" onclick="switchTab('duplicates')">👥 Duplicados</button>
-    <button class="tab-btn" onclick="switchTab('update')">🔄 Atualizações GitHub</button>
-    <button class="tab-btn" onclick="switchTab('logs')">📝 Logs / Console</button>
+    <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview', this)">📊 Visão Geral</button>
+    <button class="tab-btn" data-tab="recycle" onclick="switchTab('recycle', this)">🗑️ Lixeira</button>
+    <button class="tab-btn" data-tab="temp" onclick="switchTab('temp', this)">⚡ Arquivos Temporários</button>
+    <button class="tab-btn" data-tab="duplicates" onclick="switchTab('duplicates', this)">👥 Duplicados</button>
+    <button class="tab-btn" data-tab="update" onclick="switchTab('update', this)">🔄 Atualizações GitHub</button>
+    <button class="tab-btn" data-tab="logs" onclick="switchTab('logs', this)">📝 Logs / Console</button>
   </nav>
 
   <main>
@@ -468,7 +469,7 @@
           <!-- Mini Badges Flutuantes -->
           <g transform="translate(132, 110)">
             <rect width="80" height="22" rx="11" fill="rgba(15, 23, 42, 0.92)" stroke="rgba(52, 211, 153, 0.6)" stroke-width="1" />
-            <text x="40" y="15" fill="#34d399" font-size="9" font-weight="700" text-anchor="middle" font-family="system-ui">100% SEGURO</text>
+            <text x="40" y="15" fill="#34d399" font-size="9" font-weight="700" text-anchor="middle" font-family="system-ui">VOCÊ CONFIRMA</text>
           </g>
           <g transform="translate(6, 18)">
             <rect width="78" height="22" rx="11" fill="rgba(15, 23, 42, 0.92)" stroke="rgba(56, 189, 248, 0.5)" stroke-width="1" />
@@ -633,6 +634,13 @@
         <div id="dup-tree-container" style="padding: 16px;">
           <p style="text-align: center; color: var(--text-muted); padding: 30px;">Nenhum duplicado carregado. Clique em 'Varredura'.</p>
         </div>
+        <div style="padding: 0 16px 16px;">
+          <label style="display:flex; align-items:center; gap:8px; font-size:12px;">
+            <input type="checkbox" id="delete-duplicates-permanently">
+            Apagar duplicados permanentemente (sem enviar à Lixeira)
+          </label>
+          <p style="font-size:11px; color:var(--text-muted); margin:6px 0 0;">Por padrão, as cópias selecionadas vão para a Lixeira. Se o sistema não oferecer esse recurso, o arquivo será preservado.</p>
+        </div>
       </div>
     </div>
 
@@ -640,22 +648,19 @@
     <div class="tab-content" id="tab-update">
       <div class="hero-panel">
         <div style="max-width: 650px;">
-          <h2>🔄 Atualização Automática via GitHub</h2>
-          <p>Toda vez que você enviar um commit para o branch <strong>main</strong> no seu repositório GitHub, qualquer usuário pode clicar em verificar e atualizar a aplicação instantaneamente!</p>
+          <h2>🔄 Atualizações do Limpador-PC</h2>
+          <p>O aplicativo verifica a versão instalada contra a última Release oficial. A atualização é baixada e instalada manualmente pela página de Releases do GitHub; o aplicativo não substitui arquivos locais.</p>
           
           <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 10px;">
-            <label style="font-size: 12px; color: var(--text-muted);">Repositório GitHub Configurado (usuário/repositório):</label>
             <div style="display: flex; gap: 8px;">
-              <input type="text" id="repo-input" class="search-input" style="width: 320px;" placeholder="ex: crystian/Limpador-PC">
-              <button class="btn btn-secondary" onclick="saveRepoSetting()">Salvar</button>
               <button class="btn btn-primary" onclick="checkForUpdates()">🔍 Verificar Atualizações</button>
             </div>
           </div>
         </div>
 
         <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 18px; min-width: 280px;">
-          <div style="font-size: 12px; color: var(--text-muted);">Versão Atual:</div>
-          <div style="font-size: 16px; font-weight: 700; margin: 4px 0 12px 0;" id="cur-commit-display">v1.0.0-java</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Versão instalada:</div>
+          <div style="font-size: 16px; font-weight: 700; margin: 4px 0 12px 0;" id="current-version-display">v1.0.0</div>
           <div id="update-action-box">
             <span style="font-size: 12px; color: #94a3b8;">Clique em verificar atualizações ao lado.</span>
           </div>
@@ -681,7 +686,7 @@
       <p id="clean-modal-text">Você autoriza a realização das operações selecionadas?</p>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeCleanModal()">Cancelar</button>
-        <button class="btn btn-success" onclick="confirmCleanExecution()">Sim, Executar Exclusão</button>
+        <button class="btn btn-success" onclick="confirmCleanExecution()">Sim, Confirmar Ações</button>
       </div>
     </div>
   </div>
@@ -690,11 +695,14 @@
     let appState = {};
     let selectedCopiesSet = new Set();
 
-    function switchTab(tabId) {
+    function switchTab(tabId, tabButton = null) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      event.target.classList.add('active');
-      document.getElementById('tab-' + tabId).classList.add('active');
+      const selectedButton = tabButton || Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.dataset.tab === tabId);
+      if (selectedButton) selectedButton.classList.add('active');
+      const tab = document.getElementById('tab-' + tabId);
+      if (!tab) return;
+      tab.classList.add('active');
 
       if (tabId === 'recycle') loadRecycleDetails();
       if (tabId === 'temp') loadTempDetails();
@@ -708,6 +716,8 @@
         appState = data;
 
         document.getElementById('badge-os').textContent = '🖥️ ' + data.os_name;
+        document.getElementById('badge-git').textContent = '🔄 v' + data.app_version;
+        document.getElementById('current-version-display').textContent = 'v' + data.app_version;
         document.getElementById('status-message').textContent = data.status_message;
         
         document.getElementById('stat-recycle').textContent = data.recycle_summary.size;
@@ -742,6 +752,7 @@
       const canClean = (authRecycle || authTemp || authDup) && !appState.is_scanning && !appState.is_cleaning;
       document.getElementById('btn-clean').disabled = !canClean;
       document.getElementById('btn-clean-hero').disabled = !canClean;
+      document.getElementById('btn-shutdown').disabled = appState.is_scanning || appState.is_cleaning || appState.is_shutting_down;
     }
 
     async function startScan(type) {
@@ -809,7 +820,7 @@
           </div>
           ${grp.copies.map(c => `
             <div style="font-size: 12px; margin-left: 12px; display:flex; align-items:center; gap:8px; margin-top:4px;">
-              <input type="checkbox" ${selectedCopiesSet.has(c.path) ? 'checked' : ''} onchange="toggleCopy('${escapeJs(c.path)}', this.checked)">
+              <input type="checkbox" data-path="${escapeHtml(c.path)}" ${selectedCopiesSet.has(c.path) ? 'checked' : ''} onchange="toggleCopy(this)">
               <span class="tag-copy">🔴 CÓPIA:</span> ${escapeHtml(c.path)}
             </div>
           `).join('')}
@@ -817,8 +828,9 @@
       `).join('');
     }
 
-    function toggleCopy(path, checked) {
-      if (checked) selectedCopiesSet.add(path);
+    function toggleCopy(checkbox) {
+      const path = checkbox.dataset.path;
+      if (checkbox.checked) selectedCopiesSet.add(path);
       else selectedCopiesSet.delete(path);
     }
 
@@ -842,7 +854,11 @@
       let msg = "Você está prestes a autorizar as seguintes operações:<br><br>";
       if (authTemp) msg += `• <strong>Limpeza de Temporários & Caches:</strong> ${appState.temp_summary.size}<br>`;
       if (authRecycle) msg += `• <strong>Esvaziamento da Lixeira:</strong> ${appState.recycle_summary.size}<br>`;
-      if (authDup) msg += `• <strong>Exclusão de Duplicados:</strong> ${selectedCopiesSet.size} cópias selecionadas<br>`;
+      if (authDup) {
+        const permanent = document.getElementById('delete-duplicates-permanently').checked;
+        const destination = permanent ? 'apagadas permanentemente' : 'movidas para a Lixeira';
+        msg += `• <strong>Cópias duplicadas:</strong> ${selectedCopiesSet.size} serão ${destination}<br>`;
+      }
       msg += `<br>Espaço total estimado para liberar: <strong style="color:#10b981">${appState.total_recoverable_formatted}</strong>.<br><br>Deseja realmente prosseguir?`;
 
       document.getElementById('clean-modal-text').innerHTML = msg;
@@ -866,6 +882,7 @@
           authTemp: authTemp,
           authRecycle: authRecycle,
           authDuplicates: authDup,
+          deleteDuplicatesPermanently: document.getElementById('delete-duplicates-permanently').checked,
           selectedCopies: Array.from(selectedCopiesSet)
         })
       });
@@ -873,48 +890,50 @@
     }
 
     async function checkForUpdates() {
-      const repo = document.getElementById('repo-input').value;
       const box = document.getElementById('update-action-box');
-      box.innerHTML = '<span style="color:#60a5fa">Verificando commits no branch main...</span>';
+      box.innerHTML = '<span style="color:#60a5fa">Consultando a última Release oficial...</span>';
+      try {
+        const res = await fetch('/api/update/check');
+        const data = await res.json();
+        if (!data.success) {
+          box.innerHTML = `<span style="color:#f87171">${escapeHtml(data.error)}</span>`;
+          return;
+        }
 
-      const res = await fetch('/api/update/check?repo=' + encodeURIComponent(repo));
-      const data = await res.json();
-
-      if (!data.success) {
-        box.innerHTML = `<span style="color:#f87171">Erro: ${escapeHtml(data.error)}</span>`;
-        return;
-      }
-
-      if (data.hasUpdate) {
-        box.innerHTML = `
-          <div style="margin-bottom:8px; color:#34d399; font-weight:700">🚀 Nova versão disponível no branch main!</div>
-          <div style="font-size:11px; margin-bottom:10px;">Commit: <strong>${escapeHtml(data.latestCommit)}</strong> - "${escapeHtml(data.commitMessage)}"</div>
-          <button class="btn btn-primary" onclick="applyUpdate('${escapeJs(data.repo)}')">⬇️ Baixar e Instalar Atualização</button>
-        `;
-      } else {
-        box.innerHTML = `<span style="color:#34d399">✅ Você já está na versão mais recente da main (${data.latestCommit})!</span>`;
+        if (data.hasUpdate) {
+          box.innerHTML = `
+            <div style="margin-bottom:8px; color:#34d399; font-weight:700">🚀 Nova versão disponível: ${escapeHtml(data.latestVersion)}</div>
+            <div style="font-size:11px; margin-bottom:10px;">${escapeHtml(data.releaseName)}</div>
+            <button class="btn btn-primary" onclick="openLatestRelease()">Abrir página de Releases</button>
+          `;
+        } else {
+          box.innerHTML = `<span style="color:#34d399">✅ Você está na versão ${escapeHtml(data.currentVersion)}, a mais recente publicada (${escapeHtml(data.latestVersion)}).</span>`;
+        }
+      } catch (error) {
+        box.innerHTML = '<span style="color:#f87171">Não foi possível consultar o GitHub. Confira sua conexão e tente novamente.</span>';
       }
     }
 
-    async function applyUpdate(repo) {
-      const box = document.getElementById('update-action-box');
-      box.innerHTML = '<span style="color:#60a5fa">Baixando e atualizando arquivos pelo GitHub...</span>';
-      await fetch('/api/update/apply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repo: repo })
-      });
-      fetchStatus();
+    function openLatestRelease() {
+      window.open('https://github.com/CrystianSantos/Limpador-PC/releases/latest', '_blank', 'noopener,noreferrer');
     }
 
-    async function saveRepoSetting() {
-      const repo = document.getElementById('repo-input').value;
-      await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ github_repo: repo })
-      });
-      alert("Repositório salvo com sucesso!");
+    async function requestShutdown() {
+      if (!window.confirm('Deseja encerrar o Limpador-PC?')) return;
+      const button = document.getElementById('btn-shutdown');
+      button.disabled = true;
+      try {
+        const response = await fetch('/api/shutdown', { method: 'POST' });
+        const result = await response.json();
+        if (!response.ok) {
+          window.alert(result.error || 'Não foi possível encerrar durante uma operação.');
+          button.disabled = false;
+          return;
+        }
+        document.getElementById('status-message').textContent = result.message;
+      } catch (error) {
+        document.getElementById('status-message').textContent = 'Limpador-PC encerrado.';
+      }
     }
 
     function openUpdateModal() {
@@ -932,10 +951,6 @@
     function escapeHtml(str) {
       return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-    function escapeJs(str) {
-      return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
-    }
-
     setInterval(fetchStatus, 1500);
     fetchStatus();
   </script>

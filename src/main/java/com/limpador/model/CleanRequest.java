@@ -7,6 +7,7 @@ public class CleanRequest {
     private boolean authTemp;
     private boolean authRecycle;
     private boolean authDuplicates;
+    private boolean deleteDuplicatesPermanently;
     private List<String> selectedCopies = new ArrayList<>();
 
     public CleanRequest() {
@@ -34,6 +35,14 @@ public class CleanRequest {
 
     public void setAuthDuplicates(boolean authDuplicates) {
         this.authDuplicates = authDuplicates;
+    }
+
+    public boolean isDeleteDuplicatesPermanently() {
+        return deleteDuplicatesPermanently;
+    }
+
+    public void setDeleteDuplicatesPermanently(boolean deleteDuplicatesPermanently) {
+        this.deleteDuplicatesPermanently = deleteDuplicatesPermanently;
     }
 
     public List<String> getSelectedCopies() {

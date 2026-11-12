@@ -132,11 +132,13 @@ public class LimpadorApplicationTests {
     }
 
     @Test
-    @DisplayName("Teste de Configuração e URL do Repositório GitHub")
-    void testGithubUpdateService() {
+    @DisplayName("Comparação da versão instalada com Releases do GitHub")
+    void testGithubReleaseVersionComparison() {
         GithubUpdateService updateService = new GithubUpdateService();
-        assertEquals("CrystianSantos/Limpador-PC", updateService.getCurrentRepo());
-        updateService.setCurrentRepo("novo-dono/novo-repo");
-        assertEquals("novo-dono/novo-repo", updateService.getCurrentRepo());
+        assertEquals("1.0.0", updateService.getCurrentVersion());
+        assertTrue(GithubUpdateService.isNewerVersion("v1.0.1", "1.0.0"));
+        assertTrue(GithubUpdateService.isNewerVersion("2.0.0", "1.9.9"));
+        assertFalse(GithubUpdateService.isNewerVersion("v1.0.0", "1.0.0"));
+        assertFalse(GithubUpdateService.isNewerVersion("v0.9.9", "1.0.0"));
     }
 }

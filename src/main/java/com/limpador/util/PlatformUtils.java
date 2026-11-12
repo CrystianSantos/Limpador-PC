@@ -1,5 +1,6 @@
 package com.limpador.util;
 
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -229,6 +230,20 @@ public final class PlatformUtils {
                 deleteDirectoryContents(trashInfo);
                 return true;
             }
+            return false;
+        }
+    }
+
+    /** Moves a file to the operating system trash; returns false without deleting if unsupported. */
+    public static boolean moveToTrash(Path path) {
+        if (path == null || !Files.exists(path, java.nio.file.LinkOption.NOFOLLOW_LINKS)
+                || !Desktop.isDesktopSupported()) {
+            return false;
+        }
+        try {
+            Desktop desktop = Desktop.getDesktop();
+            return desktop.isSupported(Desktop.Action.MOVE_TO_TRASH) && desktop.moveToTrash(path.toFile());
+        } catch (Exception e) {
             return false;
         }
     }

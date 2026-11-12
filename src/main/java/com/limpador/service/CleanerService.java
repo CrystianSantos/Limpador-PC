@@ -117,7 +117,10 @@ public class CleanerService {
 
         // 3. Exclusão de Cópias Duplicadas Selecionadas (Validação Estrita de Escopo)
         if (request.isAuthDuplicates() && request.getSelectedCopies() != null && !request.getSelectedCopies().isEmpty()) {
-            messages.add("Excluindo cópias duplicadas autorizadas...");
+            boolean deletePermanently = request.isDeleteDuplicatesPermanently();
+            messages.add(deletePermanently
+                    ? "Apagando permanentemente as cópias duplicadas autorizadas..."
+                    : "Movendo as cópias duplicadas autorizadas para a Lixeira...");
 
             // Constrói conjunto de cópias genuinamente identificadas na varredura
             Map<String, String> verifiedCopyHashes = new HashMap<>();
@@ -143,6 +146,7 @@ public class CleanerService {
                 }
 
                 if (!Files.isRegularFile(p, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(p)) {
+                    skipped++;
                     continue;
                 }
 
@@ -153,9 +157,10 @@ public class CleanerService {
                         continue;
                     }
                     long size = attrs.size();
-                    if (safeDelete(p)) {
+                    boolean removed = deletePermanently ? safeDelete(p) : PlatformUtils.moveToTrash(p);
+                    if (removed) {
                         deleted++;
-                        freedBytes += size;
+                        if (deletePermanently) freedBytes += size;
                     } else {
                         skipped++;
                     }
@@ -163,7 +168,10 @@ public class CleanerService {
                     skipped++;
                 }
             }
-            messages.add("Cópias duplicadas selecionadas e validadas foram removidas.");
+            messages.add(deletePermanently
+                    ? "Cópias selecionadas foram apagadas permanentemente."
+                    : "As cópias compatíveis foram movidas para a Lixeira; isso não libera espaço até esvaziá-la. Cópias não suportadas foram preservadas.");
+            if (skipped > 0) messages.add("Alguns itens foram preservados ou ignorados. Verifique a contagem de itens ignorados.");
         }
 
         return new CleanResult(true, deleted, skipped, freedBytes, messages);
