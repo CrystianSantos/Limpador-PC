@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = {"http://127.0.0.1:8080", "http://localhost:8080"})
 public class CleanerApiController {
 
     private static final Logger log = LoggerFactory.getLogger(CleanerApiController.class);

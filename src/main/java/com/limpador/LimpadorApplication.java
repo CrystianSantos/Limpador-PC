@@ -3,6 +3,7 @@ package com.limpador;
 import com.limpador.util.PlatformUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 
@@ -21,8 +22,13 @@ public class LimpadorApplication {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    public void onApplicationReady() {
-        String appUrl = "http://127.0.0.1:8080";
+    public void onApplicationReady(ApplicationReadyEvent event) {
+        if (!(event.getApplicationContext() instanceof ServletWebServerApplicationContext webContext)) {
+            System.err.println("Nao foi possivel detectar o servidor web para abrir o Limpador-PC.");
+            return;
+        }
+        int port = webContext.getWebServer().getPort();
+        String appUrl = "http://127.0.0.1:" + port;
         System.out.println("==========================================================");
         System.out.println("  🧹 Limpador-PC Pro (Spring Boot + Java 21)");
         System.out.println("  Servidor ativo em: " + appUrl);

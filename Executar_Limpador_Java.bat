@@ -27,20 +27,9 @@ if not exist "%JAR%" (
     )
 )
 
-echo Iniciando Limpador-PC Pro...
-start "Limpador-PC Pro" cmd /k java -jar "%JAR%"
-
-echo Aguardando o servidor local iniciar...
-for /L %%i in (1,1,30) do (
-    curl.exe --silent --fail http://127.0.0.1:8080/ >nul 2>nul
-    if not errorlevel 1 goto open_browser
-    timeout /t 1 /nobreak >nul
+echo Iniciando Limpador-PC Pro. Mantenha esta janela aberta enquanto usar o aplicativo.
+java -jar "%JAR%"
+if errorlevel 1 (
+    echo O Limpador-PC Pro foi encerrado com erro. Consulte a mensagem acima.
 )
-
-echo O servidor nao respondeu em 30 segundos. Verifique a janela do Limpador-PC Pro.
 pause
-exit /b 1
-
-:open_browser
-start "" "http://127.0.0.1:8080/"
-exit /b 0

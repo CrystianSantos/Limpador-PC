@@ -17,8 +17,8 @@ Reimplementação completa do **Limpador-PC** em **Java 21 com Spring Boot 3**, 
    - Roda exatamente da mesma forma no **Windows**, **macOS** e **Linux** sem necessidade de compilação condicional ou bibliotecas nativas proprietárias.
 2. **⚡ Arquitetura Spring Boot 3 Robusta**:
    - Backend desacoplado com serviços Spring (`@Service`), injeção de dependências e endpoints REST modernos (`@RestController`).
-   - Interface web moderna integrada (HTML5, CSS3 Glassmorphism, Vanilla JS) servida pelo Tomcat embutido na porta `8080`.
-   - Abre automaticamente como **janela de aplicativo desktop nativa** ao iniciar.
+   - Interface integrada (HTML5, CSS3 Glassmorphism, Vanilla JS) servida pelo Tomcat embutido em uma porta local escolhida pelo sistema.
+   - Abre automaticamente em uma janela de aplicativo ao iniciar (Chromium em modo aplicativo, quando disponível).
 3. **🛡️ Varredura Ampliada e 100% Segura de Temporários**:
    - **Além do `%TEMP%`**, o sistema agora também analisa de forma segura:
      - 💥 **Relatórios de Falhas de Programas (CrashDumps)**: Arquivos de despejo de memória deixados por programas que já fecharam.
@@ -57,7 +57,7 @@ chmod +x executar_limpador.sh
 mvn spring-boot:run
 ```
 
-A interface abrirá automaticamente no endereço: `http://127.0.0.1:8080`.
+A janela do aplicativo abrirá automaticamente. O servidor escolhe uma porta local disponível e a encerra junto com o processo Java.
 
 ---
 
