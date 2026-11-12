@@ -7,18 +7,20 @@ import com.limpador.util.PlatformUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Controller REST principal do Limpador-PC Pro.
  * Implementa coordenação centralizada de estado (AppState) para evitar conflitos concorrentes,
- * restrição de CORS para origens locais seguras e validação de escopo na limpeza.
+ * validação de origem local e validação de escopo na limpeza.
  */
 @RestController
 @RequestMapping("/api")
@@ -30,7 +32,7 @@ public class CleanerApiController {
         IDLE,
         SCANNING,
         CLEANING,
-        UPDATING
+        SHUTTING_DOWN
     }
 
     private final TempScannerService tempScannerService;
@@ -38,6 +40,7 @@ public class CleanerApiController {
     private final DuplicateScannerService duplicateScannerService;
     private final CleanerService cleanerService;
     private final GithubUpdateService updateService;
+    private final ConfigurableApplicationContext applicationContext;
     private final Executor scanExecutor = Executors.newSingleThreadExecutor(r -> {
         Thread thread = new Thread(r, "limpador-scan");
         thread.setDaemon(true);
@@ -57,13 +60,15 @@ public class CleanerApiController {
             TrashScannerService trashScannerService,
             DuplicateScannerService duplicateScannerService,
             CleanerService cleanerService,
-            GithubUpdateService updateService
+            GithubUpdateService updateService,
+            ConfigurableApplicationContext applicationContext
     ) {
         this.tempScannerService = tempScannerService;
         this.trashScannerService = trashScannerService;
         this.duplicateScannerService = duplicateScannerService;
         this.cleanerService = cleanerService;
         this.updateService = updateService;
+        this.applicationContext = applicationContext;
         addLog("Servidor Spring Boot 3 iniciado. Sistema pronto.");
     }
 
@@ -83,11 +88,13 @@ public class CleanerApiController {
         resp.put("os_type", PlatformUtils.isWindows() ? "windows" : (PlatformUtils.isMac() ? "macos" : "linux"));
         resp.put("os_name", PlatformUtils.getOsDisplayName());
         resp.put("framework", "Java 21 + Spring Boot 3");
+        resp.put("app_version", updateService.getCurrentVersion());
         
         AppState current = appState.get();
         resp.put("state", current.name());
         resp.put("is_scanning", current == AppState.SCANNING);
         resp.put("is_cleaning", current == AppState.CLEANING);
+        resp.put("is_shutting_down", current == AppState.SHUTTING_DOWN);
         resp.put("status_message", statusMessage.get());
 
         long totalRecoverable = 0;
@@ -318,40 +325,20 @@ public class CleanerApiController {
     }
 
     @GetMapping("/update/check")
-    public ResponseEntity<UpdateInfo> checkUpdate(@RequestParam(required = false) String repo) {
-        UpdateInfo info = updateService.checkForUpdates(repo);
+    public ResponseEntity<UpdateInfo> checkUpdate() {
+        UpdateInfo info = updateService.checkForUpdates();
         return ResponseEntity.ok(info);
     }
 
-    @PostMapping("/update/apply")
-    public ResponseEntity<Map<String, Object>> applyUpdate(@RequestBody Map<String, String> body) {
-        if (!appState.compareAndSet(AppState.IDLE, AppState.UPDATING)) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Outra operação está em andamento."));
+    @PostMapping("/shutdown")
+    public ResponseEntity<Map<String, Object>> shutdown() {
+        if (!appState.compareAndSet(AppState.IDLE, AppState.SHUTTING_DOWN)) {
+            return ResponseEntity.status(409).body(Map.of("success", false, "error", "Finalize a varredura ou limpeza antes de sair."));
         }
-        String repo = body.get("repo");
-        try {
-            addLog("Iniciando auto-atualização pelo GitHub...");
-            boolean ok = updateService.applyUpdate(repo);
-            if (ok) {
-                addLog("Atualização aplicada; reinicie o aplicativo para carregar os arquivos atualizados.");
-                return ResponseEntity.ok(Map.of("success", true, "message", "Atualizado. Reinicie o aplicativo para carregar a nova versão."));
-            }
-            addLog("Falha ao aplicar atualização do GitHub: verificação de segurança falhou ou rede indisponível.");
-            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Falha na atualização de segurança."));
-        } finally {
-            appState.set(AppState.IDLE);
-        }
-    }
-
-    @PostMapping("/settings")
-    public ResponseEntity<Map<String, Object>> saveSettings(@RequestBody Map<String, String> body) {
-        String repo = body.get("github_repo");
-        if (repo != null && !repo.isBlank()) {
-            boolean valid = updateService.setCurrentRepo(repo.trim());
-            if (valid) {
-                return ResponseEntity.ok(Map.of("success", true, "message", "Repositório configurado."));
-            }
-        }
-        return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Repositório inválido ou não autorizado."));
+        statusMessage.set("Encerrando o Limpador-PC...");
+        addLog("Encerramento solicitado pelo usuário.");
+        CompletableFuture.delayedExecutor(400, TimeUnit.MILLISECONDS)
+                .execute(applicationContext::close);
+        return ResponseEntity.ok(Map.of("success", true, "message", "O Limpador-PC está sendo encerrado."));
     }
 }

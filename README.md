@@ -7,19 +7,19 @@
   <img src="https://img.shields.io/badge/Security-Safe%20Buffer%20%26%20Lock%20Check-success?style=for-the-badge" alt="Security" />
 </p>
 
-Reimplementação completa do **Limpador-PC** em **Java 21 com Spring Boot 3**, projetado para máxima compatibilidade multiplataforma nativa (Windows, macOS e Linux), varredura inteligente de pastas temporárias ampliadas sem afetar programas em execução, detecção de duplicados criptográfica via **SHA-256** e auto-atualização contínua pelo GitHub.
+Reimplementação do **Limpador-PC** em **Java 21 com Spring Boot 3**, com suporte a Windows, macOS e Linux, varredura de pastas temporárias, detecção de duplicados por **SHA-256** e consulta de versões publicadas no GitHub.
 
 ---
 
 ## 🎯 Por que a versão em Java com Spring Boot?
 
-1. **☕ Multiplataforma Nativa Real (Write Once, Run Anywhere)**:
+1. **☕ Multiplataforma (Write Once, Run Anywhere)**:
    - Roda exatamente da mesma forma no **Windows**, **macOS** e **Linux** sem necessidade de compilação condicional ou bibliotecas nativas proprietárias.
 2. **⚡ Arquitetura Spring Boot 3 Robusta**:
    - Backend desacoplado com serviços Spring (`@Service`), injeção de dependências e endpoints REST modernos (`@RestController`).
    - Interface integrada (HTML5, CSS3 Glassmorphism, Vanilla JS) servida pelo Tomcat embutido em uma porta local escolhida pelo sistema.
    - Abre automaticamente em uma janela de aplicativo ao iniciar (Chromium em modo aplicativo, quando disponível).
-3. **🛡️ Varredura Ampliada e 100% Segura de Temporários**:
+3. **🛡️ Varredura Ampliada com Confirmação do Usuário**:
    - **Além do `%TEMP%`**, o sistema agora também analisa de forma segura:
      - 💥 **Relatórios de Falhas de Programas (CrashDumps)**: Arquivos de despejo de memória deixados por programas que já fecharam.
      - 🌐 **Cache de Rede do Windows (INetCache)**: Resíduos temporários de conexões antigas.
@@ -32,15 +32,15 @@ Reimplementação completa do **Limpador-PC** em **Java 21 com Spring Boot 3**, 
 4. **👥 Detecção Criptográfica de Duplicados (SHA-256)**:
    - Triagem rápida por tamanho $\rightarrow$ Hash de cabeçalho de 8 KB $\rightarrow$ Confirmação bit a bit com hash SHA-256 nativo do Java (`MessageDigest`).
    - O arquivo original mais antigo é **automaticamente protegido** (Manter), listando apenas as cópias para remoção.
-5. **🔄 Auto-Atualização Direta do GitHub (Branch `main`)**:
-   - O serviço `GithubUpdateService` consulta a API do GitHub com Java `HttpClient`, avisa sobre novos commits na `main` e permite atualizar os arquivos da aplicação em 1 clique!
+5. **🔄 Verificação de Releases do GitHub**:
+   - O serviço compara a versão deste JAR com a última Release publicada no repositório oficial. A instalação é feita manualmente pela página de Releases; o aplicativo não baixa nem sobrescreve arquivos da instalação.
 
 ---
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
-* Java JDK 17 ou superior (Recomendado: Java 21 LTS).
+* Java JDK 21 ou superior.
 
 ### No Windows:
 Basta dar **duplo clique** no arquivo:
@@ -76,21 +76,23 @@ java -jar target/limpador-pc-1.0.0.jar
 
 ---
 
-## 🌐 Publicando no GitHub e CI/CD Automático
+## 🌐 Desenvolvimento e publicação
 
-O projeto já inclui a automação configurada em `.github/workflows/build-java.yml`. Toda vez que você fizer `push` para a `main` no seu GitHub, o GitHub Actions:
-1. Compila o projeto no **Windows, Ubuntu e macOS**.
-2. Roda a suíte de testes automatizados com JUnit 5.
-3. Disponibiliza os downloads dos pacotes executáveis para download na aba **Releases** do repositório!
+O workflow `.github/workflows/build-java.yml` compila e testa alterações em Pull Requests e na `main`. Trabalhe em uma branch e abra um Pull Request para revisão:
 
 ```bash
-git init
-git add .
-git commit -m "feat: migração completa para Java 21 com Spring Boot 3"
-git branch -M main
-git remote add origin https://github.com/SEU-USUARIO/Limpador-PC.git
-git push -u origin main
+git switch main
+git pull --ff-only
+git switch -c fix/minha-correcao
+git add <arquivos-alterados>
+git commit -m "Descreva a alteração"
+git push -u origin fix/minha-correcao
 ```
+
+Depois, abra um Pull Request para `main` e aguarde o CI. Para publicar uma versão, crie uma tag `vX.Y.Z` depois do merge. O workflow:
+1. Compila o projeto no **Windows, Ubuntu e macOS**.
+2. Roda a suíte de testes automatizados com JUnit 5.
+3. Anexa os artefatos compilados à Release do GitHub.
 
 ---
 
@@ -109,7 +111,7 @@ git push -u origin main
 │   │   │   │   ├── TrashScannerService.java     # Esvaziamento de Lixeira Multiplataforma
 │   │   │   │   ├── DuplicateScannerService.java # Algoritmo de duplicados SHA-256 em 3 fases
 │   │   │   │   ├── CleanerService.java          # Exclusão segura com preservação de travamento
-│   │   │   │   └── GithubUpdateService.java     # Motor de auto-atualização pelo GitHub
+│   │   │   │   └── GithubUpdateService.java     # Verificação de versões publicadas no GitHub
 │   │   │   ├── model/                           # DTOs e entidades de transferência de dados
 │   │   │   └── util/                            # Utilitários de SO e formatação de bytes
 │   │   └── resources/
@@ -126,4 +128,4 @@ git push -u origin main
 ---
 
 ## 📄 Licença
-Distribuído sob a licença MIT. Livre para uso pessoal, modificação e distribuição.
+Distribuído sob a licença Apache 2.0. Consulte o arquivo [LICENSE](LICENSE) para os termos completos.
